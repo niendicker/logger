@@ -1,0 +1,25 @@
+{
+	"folders": [
+      {
+         "path": "."
+      },
+      {
+         "path": "../../../etc/postgresql/13/main"
+      },
+      {
+         "path": "../01_crypto/02_Wallet"
+      },
+      {
+         "path": "../biogas"
+      }
+   ],
+   "settings": {
+      "editor.tabSize": 3,
+      "editor.accessibilityPageSize": 11,
+      "files.associations": {
+         "modbus.h": "c",
+         "modbus-tcp.h": "c",
+         "errno.h": "c"
+      }
+   }
+}

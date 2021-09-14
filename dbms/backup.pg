@@ -1,0 +1,284 @@
+--
+-- PostgreSQL database cluster dump
+--
+
+-- Started on 2021-09-02 16:13:06 -03
+
+SET default_transaction_read_only = off;
+
+SET client_encoding = 'BIG5';
+SET standard_conforming_strings = on;
+
+--
+-- Roles
+--
+
+CREATE ROLE marcelo;
+ALTER ROLE marcelo WITH SUPERUSER INHERIT NOCREATEROLE NOCREATEDB LOGIN NOREPLICATION NOBYPASSRLS PASSWORD 'md5c0bd5bf9649e521309339efc02c1f912';
+CREATE ROLE postgres;
+ALTER ROLE postgres WITH SUPERUSER INHERIT CREATEROLE CREATEDB LOGIN REPLICATION BYPASSRLS;
+
+
+
+
+
+
+--
+-- Databases
+--
+
+--
+-- Database "template1" dump
+--
+
+\connect template1
+
+--
+-- PostgreSQL database dump
+--
+
+-- Dumped from database version 13.4 (Ubuntu 13.4-1.pgdg20.04+1)
+-- Dumped by pg_dump version 13.4 (Ubuntu 13.4-1.pgdg20.04+1)
+
+-- Started on 2021-09-02 16:13:06 -03
+
+SET statement_timeout = 0;
+SET lock_timeout = 0;
+SET idle_in_transaction_session_timeout = 0;
+SET client_encoding = 'BIG5';
+SET standard_conforming_strings = on;
+SELECT pg_catalog.set_config('search_path', '', false);
+SET check_function_bodies = false;
+SET xmloption = content;
+SET client_min_messages = warning;
+SET row_security = off;
+
+-- Completed on 2021-09-02 16:13:06 -03
+
+--
+-- PostgreSQL database dump complete
+--
+
+--
+-- Database "postgres" dump
+--
+
+\connect postgres
+
+--
+-- PostgreSQL database dump
+--
+
+-- Dumped from database version 13.4 (Ubuntu 13.4-1.pgdg20.04+1)
+-- Dumped by pg_dump version 13.4 (Ubuntu 13.4-1.pgdg20.04+1)
+
+-- Started on 2021-09-02 16:13:06 -03
+
+SET statement_timeout = 0;
+SET lock_timeout = 0;
+SET idle_in_transaction_session_timeout = 0;
+SET client_encoding = 'BIG5';
+SET standard_conforming_strings = on;
+SELECT pg_catalog.set_config('search_path', '', false);
+SET check_function_bodies = false;
+SET xmloption = content;
+SET client_min_messages = warning;
+SET row_security = off;
+
+-- Completed on 2021-09-02 16:13:06 -03
+
+--
+-- PostgreSQL database dump complete
+--
+
+--
+-- Database "teste0" dump
+--
+
+--
+-- PostgreSQL database dump
+--
+
+-- Dumped from database version 13.4 (Ubuntu 13.4-1.pgdg20.04+1)
+-- Dumped by pg_dump version 13.4 (Ubuntu 13.4-1.pgdg20.04+1)
+
+-- Started on 2021-09-02 16:13:06 -03
+
+SET statement_timeout = 0;
+SET lock_timeout = 0;
+SET idle_in_transaction_session_timeout = 0;
+SET client_encoding = 'BIG5';
+SET standard_conforming_strings = on;
+SELECT pg_catalog.set_config('search_path', '', false);
+SET check_function_bodies = false;
+SET xmloption = content;
+SET client_min_messages = warning;
+SET row_security = off;
+
+--
+-- TOC entry 3005 (class 1262 OID 16386)
+-- Name: teste0; Type: DATABASE; Schema: -; Owner: marcelo
+--
+
+CREATE DATABASE teste0 WITH TEMPLATE = template0 ENCODING = 'UTF8' LOCALE = 'en_US.UTF-8';
+
+
+ALTER DATABASE teste0 OWNER TO marcelo;
+
+\connect teste0
+
+SET statement_timeout = 0;
+SET lock_timeout = 0;
+SET idle_in_transaction_session_timeout = 0;
+SET client_encoding = 'BIG5';
+SET standard_conforming_strings = on;
+SELECT pg_catalog.set_config('search_path', '', false);
+SET check_function_bodies = false;
+SET xmloption = content;
+SET client_min_messages = warning;
+SET row_security = off;
+
+--
+-- TOC entry 5 (class 2615 OID 16387)
+-- Name: teste0; Type: SCHEMA; Schema: -; Owner: marcelo
+--
+
+CREATE SCHEMA teste0;
+
+
+ALTER SCHEMA teste0 OWNER TO marcelo;
+
+--
+-- TOC entry 7 (class 2615 OID 16405)
+-- Name: teste1; Type: SCHEMA; Schema: -; Owner: marcelo
+--
+
+CREATE SCHEMA teste1;
+
+
+ALTER SCHEMA teste1 OWNER TO marcelo;
+
+--
+-- TOC entry 205 (class 1255 OID 24592)
+-- Name: random_text(integer); Type: FUNCTION; Schema: public; Owner: marcelo
+--
+
+CREATE FUNCTION public.random_text(integer) RETURNS text
+    LANGUAGE sql
+    AS $_$ 
+  select upper(
+    substring(
+      (SELECT string_agg(md5(random()::TEXT), '')
+       FROM generate_series(
+           1,
+           CEIL($1 / 32.)::integer) 
+       ), 1, $1) );
+$_$;
+
+
+ALTER FUNCTION public.random_text(integer) OWNER TO marcelo;
+
+SET default_tablespace = '';
+
+SET default_table_access_method = heap;
+
+--
+-- TOC entry 203 (class 1259 OID 16398)
+-- Name: newtable; Type: TABLE; Schema: teste0; Owner: marcelo
+--
+
+CREATE TABLE teste0.newtable (
+    column1 bigint NOT NULL,
+    column2 character varying,
+    column3 character varying,
+    column4 character varying,
+    column5 character varying
+);
+
+
+ALTER TABLE teste0.newtable OWNER TO marcelo;
+
+--
+-- TOC entry 202 (class 1259 OID 16396)
+-- Name: newtable_column1_seq; Type: SEQUENCE; Schema: teste0; Owner: marcelo
+--
+
+ALTER TABLE teste0.newtable ALTER COLUMN column1 ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME teste0.newtable_column1_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- TOC entry 204 (class 1259 OID 24588)
+-- Name: testView; Type: VIEW; Schema: teste0; Owner: marcelo
+--
+
+CREATE VIEW teste0."testView" AS
+ SELECT newtable.column1
+   FROM teste0.newtable;
+
+
+ALTER TABLE teste0."testView" OWNER TO marcelo;
+
+--
+-- TOC entry 2999 (class 0 OID 16398)
+-- Dependencies: 203
+-- Data for Name: newtable; Type: TABLE DATA; Schema: teste0; Owner: marcelo
+--
+
+COPY teste0.newtable (column1, column2, column3, column4, column5) FROM stdin;
+\.
+
+
+--
+-- TOC entry 3008 (class 0 OID 0)
+-- Dependencies: 202
+-- Name: newtable_column1_seq; Type: SEQUENCE SET; Schema: teste0; Owner: marcelo
+--
+
+SELECT pg_catalog.setval('teste0.newtable_column1_seq', 2, true);
+
+
+--
+-- TOC entry 2866 (class 1259 OID 16404)
+-- Name: newtable_column1_idx; Type: INDEX; Schema: teste0; Owner: marcelo
+--
+
+CREATE UNIQUE INDEX newtable_column1_idx ON teste0.newtable USING btree (column1);
+
+
+--
+-- TOC entry 3006 (class 0 OID 0)
+-- Dependencies: 2
+-- Name: SCHEMA pg_catalog; Type: ACL; Schema: -; Owner: postgres
+--
+
+REVOKE ALL ON SCHEMA pg_catalog FROM postgres;
+
+
+--
+-- TOC entry 3007 (class 0 OID 0)
+-- Dependencies: 203
+-- Name: COLUMN newtable.column1; Type: ACL; Schema: teste0; Owner: marcelo
+--
+
+GRANT SELECT(column1) ON TABLE teste0.newtable TO postgres;
+
+
+-- Completed on 2021-09-02 16:13:06 -03
+
+--
+-- PostgreSQL database dump complete
+--
+
+-- Completed on 2021-09-02 16:13:06 -03
+
+--
+-- PostgreSQL database cluster dump complete
+--
+

@@ -1,0 +1,37 @@
+#In order to read and process any data from a slave modbus device the data bellow are mandatory.
+#register+++ is the open TAG for a register data block
+#space or comment after register block is the end tag
+
+#Register 0
+register+++
+function = 04
+address  = 30
+size     = 1
+format   = US_08
+signal   = 0
+scale    = 256
+unit     = hz
+meaning  = Generator_Frequency
+
+#Always keep at least one space or comment between registers data blocks
+
+#Register 1
+register+++
+function = 10
+address  = 50
+size     = 3
+format   = US_08
+signal   = 0
+scale    = 256
+unit     = hz
+meaning  = Generator_Volt
+
+register+++
+function = 10
+address  = 50
+size     = 3
+format   = US_08
+signal   = 0
+scale    = 256
+unit     = hz
+meaning  = Generator_Volt
