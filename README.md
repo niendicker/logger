@@ -1,12 +1,9 @@
-# dbms
-Soluções relacionadas a coleta, armazenamento, análise e exportação/interfaces de dados.
+Solutions related to data collection, storage, analysis and export/interfaces.
 
-O Serviço modbusTcpMaster irá rodar no sistema alvo (arm) coletando informações de todos os dispositivos
-configurados.
-Um exemplo de configuração pode ser encontrada no arquivo < dbms/00_rpi/gc600.conf >.
-A formatação dos registros modbus dos dispositivos configurados através dos aquivos .conf devem seguir o 
-modelo do arquivo < dbms/00_rpi/gc600.map >.
+The modbusTcpMaster Service will run on the target system (arm) collecting information from all configured devices. An example configuration can be found in the file < dbms/00_rpi/gc600.conf >. The modbus registers map of each modbus device must follow the file model < dbms/00_rpi/gc600.mbr >.
 
-Podem ser configurados vários processos com um ou mais dispositivos. 
+Multiple processes can be configured with one or more devices.
 
-Mais detalhes em breve...
+More details coming soon...
+ 
+OPTIONS[ [config_file_path] [polling_time(ms)] [pollingCount] [errorMax] ]
