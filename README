@@ -6,4 +6,4 @@ Multiple processes can be configured with one or more devices.
 
 More details coming soon...
  
-OPTIONS[ [config_file_path] [polling_time(ms)] [pollingCount] [errorMax] ]
+ OPTIONS[ [config_file_path] [polling_time(ms)] [pollingCount] [errorMax] ]
