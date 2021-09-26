@@ -24,6 +24,7 @@
 #include <sys/socket.h>                            
 #include <arpa/inet.h>	/* inet_addr */
 #include <netdb.h>	    /* hostent */
+#include "errorCtrl.h"
 #include "mbDevice.h"
 
 enum mbFunctionCode {       /* Just supported                  */
@@ -60,43 +61,43 @@ enum mbExceptionCode{
 };
 
 enum MBAPi { /* MBAP Data Index from ADU[0] for [tx/rxVector] */
-  tIDMsb = 0, tIDLsb, /* 16 bits value */
-  pIDMsb, pIDLsb, 
-  dSZMsb, dSZLsb, 
-  uID, /* 8 bits value */
+  _tIDMsb = 0, _tIDLsb, /* 16 bits value */
+  _pIDMsb, _pIDLsb, 
+  _dSZMsb, _dSZLsb, 
+  _uID, /* 8 bits value */
   _mbap_size_
 };
 
 enum requestPDUi { /* PDU data index from ADU[sizeof(MBAP)]*/
-  functionCode = (_mbap_size_),
-  registerAddrMsb,
-  registerAddrLsb,
-  registerSizeMsb,
-  registerSizeLsb,
+  _fCode = (_mbap_size_),
+  _mbrAddrMsb,
+  _mbrAddrLsb,
+  _mbrSizeMsb,
+  _mbrSizeLsb,
   _adu_size_ /* Reference for modbus QUERY/REPLY MAXIMUM SIZE */
 };           /* MBAP + PDU = Modbus message */
 
 enum replyPDUi { /* Reply PDU data index */
-  replyFC = (_mbap_size_),
-  replySz, /* payload bytes */
-  replyData /* payload start data*/
+  _replyFC = (_mbap_size_),
+  _replySZ, /* payload bytes */
+  _replyData /* payload start data*/
 };
 
 enum _aduBytes { /* From Modbus specification */
   adu_size_max = 260,      /* Absolute Maximum bytes in Request/Reply ADU */
   mbap_size = (_mbap_size_),
   fc_size = 1,
-  payload_size_max = ( (adu_size_max) - (mbap_size) - (functionCode) ),
+  payload_size_max = ( (adu_size_max) - (mbap_size) - (_fCode) ),
   reply_exception = 2,
   reply_size_min = ( (_mbap_size_) + (reply_exception) ),
   reply_size_max = (_adu_size_)
 };
 
 typedef struct { /* MODBUS APPLICATION PROTOCOL HEADER - MBAP  */
-  __uint16_t tID; /* IDentification of a MODBUS Request/Response transaction */
-  __uint16_t pID; /* 0 = MODBUS protocol */
-  __uint16_t fBytes; /* Number of following bytes(unitID + FC + FC specific data) */
-  __uint8_t uID; /* Device address connected on a serial line or on other buses */
+  __uint16_t _tID; /* IDentification of a MODBUS Request/Response transaction */
+  __uint16_t _pID; /* 0 = MODBUS protocol */
+  __uint16_t _fBytes; /* Number of following bytes(unitID + FC + FC specific data) */
+  __uint8_t  _uID; /* Device address connected on a serial line or on other buses */
 } _aduMBAP;
 
 typedef struct { /* PROTOCOL DATA UNIT - PDU */
@@ -178,7 +179,7 @@ mbCtx * mbLoadConf(const char * filePath);
  * @param ctx device context
  * @return done|failure
  */
-int mbShowConf(const mbCtx *ctx);
+int mbShowConf(mbCtx *ctx);
 
 /**
  * @brief Load all device's registers map metadata
@@ -190,7 +191,7 @@ mbCtx *mbLoadMap(mbCtx *ctx);
 /**
  * @brief  Print device registers map information
 **/
-int mbShowRegistersMap(const mbCtx *ctx);
+int mbShowRegistersMap(mbCtx *ctx);
 
 /**
  * @brief Receive a hostname and try to get and return the IP address
@@ -216,11 +217,10 @@ int mbInitPdu(mbCtx *ctx);
 
 /**
  * @brief  Send request to a modbus device
- * @param  ctx Modbus device context
- * @param  mbr Modbus register 
+ * @param  ctx Modbus device context 
  * @return done|failure
  */
-int mbSendRequest(mbCtx *ctx, _mbrNode *mbr);
+int mbSendRequest(mbCtx *ctx);
 
 /**
  * @brief Print to stdout sendded ADU raw data
@@ -241,10 +241,9 @@ uint32_t waitReply(mbCtx *ctx);
  * @brief  After a request is sended to slave this function get and process the reply
  *
  * @param  ctx Modbus device Context
- * @param  mbr Modbus register with data for PDU
  * @return done|failure
  */
-int mbGetReply(mbCtx *ctx, _mbrNode *mbr);
+int mbGetReply(mbCtx *ctx);
 
 /**
  * @brief Print to stdout received ADU raw data
@@ -259,9 +258,8 @@ int _mbReplyRaw(const mbCtx *ctx);
  *        this function parse and save received data to ctx  
  *
  * @param  ctx Modbus device Context
- * @param  mbr Modbus register with data for check
  * @return done|failure
  */
-int mbParseReply(mbCtx *ctx, _mbrNode *mbr);
+int mbParseReply(mbCtx *ctx);
 
 #endif /* ./include/modbusTcp.h */
