@@ -18,6 +18,7 @@
 #include <string.h>
 #include <stdint.h>
 #include "errorCtrl.h"
+// /#include "mbTcp.h"
 
 #define   FOREACH_CONFIG_DATA_KEY( CONFIG_DATA_KEY )  \
             CONFIG_DATA_KEY( tag              )  \
@@ -49,7 +50,6 @@ enum{
             DATA_KEY( scale        ) \
             DATA_KEY( unit         ) \
             DATA_KEY( meaning      ) \
-            DATA_KEY( lastValid    ) \
             DATA_KEY( _lastTuple_  ) //Include New tuples above ^^^
 
 #define ENUM_MBR_DATA_KEY(ENUM) ENUM,
@@ -85,32 +85,26 @@ typedef struct __link{
    _rtu modbusRtu;
 } _link;
 
-typedef struct __dn{
-  void *key;
-  void *value;
-  _dn  *next;
+typedef struct __dn{  /* Generic data node for single linked list */
+  void *_key;
+  void *_value;
+  struct __dn  *_next;
 } _dn; 
 
-typedef struct { /* Configurations linked list dts */
-  _dn *_head;
-  _dn *_current;
-  _config *_next;
-} _config;
-
-typedef struct { 
+typedef struct __config { /* Configurations single linked list dts */
   _dn *_head;
   _dn *_curr;
-  _mbr *next;
+  struct __config *_next;
+} _config;
+
+typedef struct __mbr { /* Modbus Registers Map single linked list dts */
+  int16_t  lastValid; /* Keep the last value successfull readded from device */
+  _dn *_head;
+  _dn *_curr;
+  struct __mbr *_next;
 } _mbr;
 
-typedef struct __mbrn{ 
-  int16_t  lastValid; /* Keep the last value successfull readded from device */
-  _mbr *_head;
-  _mbr *_curr;
-  _mbrMap *_next;
-} _mbrMap;
-
-typedef struct _dev{
+typedef struct __dev{
   _link link;    /* Data to connect to device */
   _config *_headConfig;
   _config *_currConfig;
@@ -127,7 +121,7 @@ typedef struct _dev{
  * @param filePath Path to device configuration file
  * @return device|failure
  */
-device* loadDeviceConf(device* mbDevice, const char* filePath);
+device* deviceConfig(device* dev, const char* filePath);
 
 /**
  * @brief  Print device configuration parameters
@@ -142,7 +136,7 @@ int showDeviceConf(device *dev);
  * @param  key Data tuple ID to find
  * @return _confTupleNode|NULL
  */
-char *confPeekValue(const _confNode *conf, const char *key);
+char *confPeekValue(_config *config, char *key);
 
 /**
  * @brief  Free all dynamic memory allocated
@@ -157,20 +151,20 @@ int freeDeviceConf(device *dev);
  * @param dev Device with registers map file path loaded on loadDeviceConf()
  * @return device|failure
  */
-device *loadDeviceMap(device *dev);
+device *deviceMap(device *dev);
 
 /**
  * @brief  Print device registers map information
  * @param  ctx Modbus device context
  * @return done|failure
  */
-int showDeviceMap(const device *dev);
+int showDeviceMap(device *dev);
 
 /**
  * @brief  Insert mbr touple into current register
  * @return done|NULL
  */
-int mbrMapPop(device *mbDev, char *key, char *value);
+int mbrMapPop(device *dev, char *key, char *value);
 
 /**
  * @brief  Find and return some modbus register key and value tuple
@@ -178,7 +172,7 @@ int mbrMapPop(device *mbDev, char *key, char *value);
  * @param  key Data tuple ID to find
  * @return value|NULL
  */
-char *mbrPeekValue(const _mbrNode *mbr, const char *key);
+char *mbrPeekValue(_mbr *mbr, char *key);
 
 /**
  * @brief  Free all dynamic memory allocated

@@ -11,22 +11,25 @@
 
 #include "mbDevice.h"
 
+int deviceInit(device *dev){
+  memset(dev, 0, sizeof(*dev));
+  return done;
+};
+
 int deviceSetCtx(device *mbDevice){
-  assert( mbDevice && mbDevice->currConfig );
-  _confNode *confNode = mbDevice->currConfig;
-  strcpy ( mbDevice->mapFile, confValue(confNode, mapFile) );
-  strcpy ( mbDevice->tag, confValue(confNode, tag) );
-  strcpy ( mbDevice->link.protocol, confValue(confNode, protocol) );
-  strcpy ( mbDevice->link.modbusTcp.ipAddress, confValue(confNode, ipAddress) );
-  strcpy ( mbDevice->link.modbusTcp.hostname, confValue(confNode, hostname) );
-  mbDevice->link.modbusTcp.port        = (uint16_t)strtol( confValue( confNode, port      ) , NULL, 10);
-  mbDevice->link.modbusTcp.msTimeout   = (uint16_t)strtol( confValue( confNode, msTimeout ) , NULL, 10);
-  mbDevice->link.modbusRtu.unitAddress = (uint8_t)strtol(  confValue( confNode, unitAddress ) , NULL, 10);
-  mbDevice->link.modbusRtu.baudRate    = (uint16_t)strtol( confValue( confNode, baudRate  ) , NULL, 10);
-  mbDevice->link.modbusRtu.dataBits    = (uint8_t)strtol(  confValue( confNode, dataBits    ) , NULL, 10);
-  mbDevice->link.modbusRtu.stopBits    = (uint8_t)strtol(  confValue( confNode, stopBits    ) , NULL, 10);
-  mbDevice->link.modbusRtu.parity      = (uint8_t)strtol(  confValue( confNode, parity      ) , NULL, 10);
-  mbDevice->link.modbusRtu.handshake   = (uint8_t)strtol(  confValue( confNode, handshake   ) , NULL, 10);
+  assert( mbDevice && mbDevice->_currConfig );
+  _config *currConfing = mbDevice->_currConfig;
+  strcpy ( mbDevice->link.protocol, confValue(currConfing, protocol) );
+  strcpy ( mbDevice->link.modbusTcp.ipAddress, confValue(currConfing, ipAddress) );
+  strcpy ( mbDevice->link.modbusTcp.hostname, confValue(currConfing, hostname) );
+  mbDevice->link.modbusTcp.port        = (uint16_t)strtol( confValue( currConfing, port      ) , NULL, 10);
+  mbDevice->link.modbusTcp.msTimeout   = (uint16_t)strtol( confValue( currConfing, msTimeout ) , NULL, 10);
+  mbDevice->link.modbusRtu.unitAddress = (uint8_t)strtol(  confValue( currConfing, unitAddress ) , NULL, 10);
+  mbDevice->link.modbusRtu.baudRate    = (uint16_t)strtol( confValue( currConfing, baudRate  ) , NULL, 10);
+  mbDevice->link.modbusRtu.dataBits    = (uint8_t)strtol(  confValue( currConfing, dataBits    ) , NULL, 10);
+  mbDevice->link.modbusRtu.stopBits    = (uint8_t)strtol(  confValue( currConfing, stopBits    ) , NULL, 10);
+  mbDevice->link.modbusRtu.parity      = (uint8_t)strtol(  confValue( currConfing, parity      ) , NULL, 10);
+  mbDevice->link.modbusRtu.handshake   = (uint8_t)strtol(  confValue( currConfing, handshake   ) , NULL, 10);
   return done;
 }
 
@@ -37,48 +40,42 @@ int deviceSetCtx(device *mbDevice){
  * @param filePath Path to device configuration file
  * @return device|NULL
  */
-device *loadDeviceConf(device* mbDevice, const char* filePath){
-   assert(mbDevice && filePath);
-   FILE* deviceConf = fopen(filePath, "r");
-   if( !deviceConf ){
+device *deviceConfig(device* mbDevice, const char* filePath){
+  assert(mbDevice && filePath);
+  FILE* deviceConf = fopen(filePath, "r");
+  if( !deviceConf ){
 #ifndef NDEBUG
-      printf("Error: Can't open device configuration file\n");
-#endif
-      return NULL;
-   }
-   char keyValue[200];
-   mbDevice->currConfig = (_confNode*)malloc(sizeof(_confNode));
-   assert(mbDevice->currConfig);
-   mbDevice->currConfig->_head = NULL;
-   for( int line = 1; fgets(keyValue, sizeof(keyValue), deviceConf) != NULL; line++){
-      if( IGNORE( keyValue[0] ) ) continue; /* Comment or bad format */
-      char* token = strtok(keyValue, "= ");
-      if( !token ) { /* Bad [ token = value ] line format */
-#ifndef NDEBUG
-         printf("Error: Bad key = value format at line %d\n", line);
-#endif         
-         return NULL;
-      }
-        char* value = strtok( NULL, "= " );
-        if( !value ) {
-#ifndef NDEBUG
-          printf("Error: Bad value for key at line %d\n", line);
+    printf("Error: Can't open device configuration file\n");
 #endif
     return NULL;
-  }
-    value[ strcspn(value, "\n") ] = '\0'; /* Remove new line from value */
-    mbDevice->currConfig->_head = (_confDataNode*)malloc(sizeof(_confDataNode));
-    mbDevice->currConfig->_head->key = (char *)malloc(strlen(token));
-    mbDevice->currConfig->_head->value = (char *)malloc(strlen(value));
-    assert(mbDevice->currConfig->_head);
-    assert(mbDevice->currConfig->_head->key);
-    assert(mbDevice->currConfig->_head->value);
-    strcpy(mbDevice->currConfig->_head->key, token);
-    strcpy(mbDevice->currConfig->_head->value, value);
-    mbDevice->currConfig->_head->next = mbDevice->currConfig->_head;    
+   }
+  char keyValue[200];
+  mbDevice->_currConfig = (_config*)malloc(sizeof(_config*));
+  assert(mbDevice->_currConfig);
+  mbDevice->_currConfig->_next = NULL;
+  for( int line = 1; fgets(keyValue, sizeof(keyValue), deviceConf) != NULL; line++){
+    if( IGNORE( keyValue[0] ) ) continue; /* Comment or bad format */
+    char* token = strtok(keyValue, "= ");
+    if( token == NULL ) { /* Bad [ token = value ] line format */
+      return NULL;
+    }
+    char* value = strtok( NULL, "= " );
+    if( value == NULL ) {
+      return NULL;
+    }
+    value[ strcspn(value, "\n") ] = '\0'; /* Remove new line from value */  
+    mbDevice->_currConfig = (_config*)malloc(sizeof(_config*));
+    mbDevice->_currConfig->_head->_key = (char *)malloc(strlen(token));
+    mbDevice->_currConfig->_head->_value = (char *)malloc(strlen(value));
+    assert(mbDevice->_currConfig->_head);
+    assert(mbDevice->_currConfig->_head->_key);
+    assert(mbDevice->_currConfig->_head->_value);
+    strcpy(mbDevice->_currConfig->_head->_key, token);
+    strcpy(mbDevice->_currConfig->_head->_value, value);
+    mbDevice->_currConfig->_head->_next = mbDevice->_currConfig->_head;    
   } /* File scan */
-  mbDevice->currConfig->next = mbDevice->headConfig;
-  mbDevice->headConfig = mbDevice->currConfig;
+  mbDevice->_currConfig->_next = mbDevice->_currConfig;
+  mbDevice->_headConfig = mbDevice->_currConfig;
   deviceSetCtx(mbDevice);
   fclose(deviceConf);
   return(mbDevice);
@@ -90,15 +87,15 @@ device *loadDeviceConf(device* mbDevice, const char* filePath){
  * @return done|failure
  */
 int showDeviceConf(device *dev){
-  assert(dev && dev->currConfig); 
-  _confDataNode *confTupleNode = dev->currConfig->_head;
-  _confDataNode *saveHead = confTupleNode;
+  assert(dev && dev->_currConfig); 
   printf("Info: Device configuration\n");
-  while (confTupleNode){
-    printf("%s: %s\n", confTupleNode->key, confTupleNode->value);
-    confTupleNode = confTupleNode->next;
+  while (dev->_currConfig->_curr){
+    char * key = (char*)dev->_currConfig->_curr->_key;
+    char * value = (char*)dev->_currConfig->_curr->_value;
+    printf("%s: %s\n", key, value);
+    dev->_currConfig->_curr = dev->_currConfig->_curr->_next;
   }  
-  dev->currConfig->_head = saveHead; /* Restore head  */
+  dev->_currConfig->_curr = dev->_currConfig->_head; /* Restore head  */
   return done;
 };
 
@@ -108,18 +105,19 @@ int showDeviceConf(device *dev){
  * @param  key Data ID to fetch the current data value
  * @return char*|NULL
  */
-char *confPeekValue(const _confNode *cn, const char *key){
-  _dn *dataNode = (_dn*)malloc(sizeof(_dn));
-  _cdn *confTupleNode = cn->_head;
-  while (cn) {
-    if( strcmp(confTupleNode->key, key) == 0 ) { 
-      char *v = (char*)malloc(strlen(confTupleNode->value));
+char *confPeekValue(_config *config, char *key){
+  assert(config && key);
+  while (config->_curr) {
+    if( strcmp(config->_curr->_key, key) == 0 ) { 
+      char *v = (char*)malloc(strlen(config->_curr->_value));
       assert(v);
-      strcpy(v, confTupleNode->value);
+      strcpy(v, config->_curr->_value);
+      config->_curr = config->_head;
       return v; 
     }
-    confTupleNode = confTupleNode->next;
+    config->_curr = config->_curr->_next;
   }
+  config->_curr = config->_head;
   return NULL;
 };
 
@@ -127,19 +125,20 @@ char *confPeekValue(const _confNode *cn, const char *key){
  * @brief  Free all dynamic memory allocated
 **/
 int freeDeviceConf(device *dev){
-  _confNode *confNodeTmp = NULL, *confNode = dev->currConfig;
-  while (confNode) {
-    _confDataNode *tNodeTmp=NULL, *tNode=confNode->_head;    
-    while (tNode) {
-      tNodeTmp = tNode;
-      tNode = tNode->next;
-      free(tNodeTmp->key);
-      free(tNodeTmp->value);
-    }  
-    confNode = confNode->next;
-    free(confNodeTmp);
-  };
-  return done;
+//  _confNode *confNodeTmp = NULL, *confNode = dev->currConfig;
+//  while (confNode) {
+//    _confDataNode *tNodeTmp=NULL, *tNode=confNode->_head;    
+//    while (tNode) {
+//      tNodeTmp = tNode;
+//      tNode = tNode->next;
+//      free(tNodeTmp->key);
+//      free(tNodeTmp->value);
+//    }  
+//    confNode = confNode->next;
+//    free(confNodeTmp);
+//  };
+//  return done;
+  return failure;
 };
 
 /**
@@ -148,21 +147,19 @@ int freeDeviceConf(device *dev){
  * @param dev Device with registers map file path loaded on loadDeviceConf()
  * @return device|NULL
  */
-device *loadDeviceMap(device *dev){
-  assert(dev && dev->mapFile);
-  FILE *deviceMap = fopen(dev->mapFile, "r");
+device *deviceMap(device *dev){
+  assert(dev);
+  FILE *deviceMap = fopen(confValue(dev->_currConfig, mapFile), "r");
   if( !deviceMap ) {
-    printf("Error: Can't open device registers map file: %s", dev->mapFile);
+    printf("Error: Can't open device registers map file");
     return NULL;
-  }
-  //_mbrNode *dev->currMapMbr = NULL;
-  _mbrDataNode *tNode = NULL;    
+  }  
   for (char _kv[100]; fgets(_kv, sizeof(_kv), deviceMap) != NULL;) { /*  Scan the entire file */
     if( ( IGNORE( _kv[0] ) ) || ( ! TOKEN_KEY_MATCH( _kv, startTag) ) ) {
          continue; /* Comments */
     }/* Found a register start tag */
-   dev->currMapMbr = (_mbrNode *)malloc(sizeof(_mbrNode)); /* Create a new register */
-    assert(dev->currMapMbr); 
+    dev->_currMbr = (_mbr*)malloc(sizeof(_mbr*)); /* Create a new register */
+    assert(dev->_currMbr); 
     for( int i = 0; i < _lastTuple_; i++) {  
       if( ( fgets( _kv, sizeof(_kv), deviceMap ) == NULL ) ||
           ( IGNORE( _kv[0] ) ) ) { /*INVALID characters aren't allowed. Abort scanning... */
@@ -182,8 +179,8 @@ device *loadDeviceMap(device *dev){
       value[strcspn(value, "\n")] = '\0'; /* Remove new line from value */
       mbrMapPop(dev, token, value);
     } 
-    dev->currMapMbr->next = dev->headMap;
-    dev->headMap =dev->currMapMbr;
+    dev->_currMbr->_next = dev->_currMbr;
+    dev->_headMbr = dev->_currMbr;
   } /* Scan entire file for registers data blocks */
   fclose(deviceMap);
   return(dev);
@@ -194,17 +191,17 @@ device *loadDeviceMap(device *dev){
  * @param  dev Modbus device 
  * @return done|failure
  */
-int showDeviceMap(const device *dev) {
-  assert(dev && dev->headMap);
-  _mbrNode *mbr = dev->headMap;
-  for(int i=1; mbr ; i++){
-    _mbrDataNode *mbrTuple = mbr->_head;
-    printf("\nInfo: REGISTER[%d]\n", i);
-    while (mbrTuple){
-      printf("%s:%s|", mbrTuple->key, (char *)mbrTuple->value);
-      mbrTuple = mbrTuple->next;
+int showDeviceMap(device *dev) {
+  assert(dev);
+  while(dev->_currMbr){
+    printf("\nInfo: Modbus Register\n");
+    while (dev->_currMbr->_curr){
+      char * key = (char*)dev->_currMbr->_curr->_key;
+      char * value = (char*)dev->_currMbr->_curr->_value;
+      printf("%s:%s|", key, value);
+      dev->_currMbr->_curr = dev->_currMbr->_curr->_next;
     }
-    mbr = mbr->next;
+    dev->_currMbr = dev->_currMbr->_next;
   }
   puts("\n");
   return done;
@@ -214,17 +211,18 @@ int showDeviceMap(const device *dev) {
  * @brief  Insert mbr touple into current register
  * @return done|NULL
  */
-int mbrMapPop(device *mbDev, char *key, char *value){
-  assert(mbDev && mbDev->currMapMbr);
-  _mbrDataNode *tNode;
-  tNode = (_mbrDataNode *)malloc(sizeof(tNode));
-  tNode->key = (char *)malloc(strlen(key));
-  tNode->value = (char *)malloc(strlen(value));
-  assert( tNode && tNode->key && tNode->value );
-  strcpy(tNode->key, key);
-  strcpy(tNode->value, value);
-  tNode->next = mbDev->currMapMbr->_head;
-  mbDev->currMapMbr->_head = tNode;  
+int mbrMapPop(device *dev, char *key, char *value){
+  assert(dev && key && value);
+  _dn *dn = (_dn*)malloc(sizeof(_dn*));
+  assert(dn);
+  dn->_key = (char*)malloc(strlen(key));
+  assert(dn->_key);
+  dn->_value = (char*)malloc(strlen(value));
+  assert(dn->_value);
+  strcpy(dn->_key, key);
+  strcpy(dn->_value, value);
+  dn->_next = dev->_currMbr->_head;
+  dev->_currMbr->_head = dn;
   return done;
 };
 
@@ -234,17 +232,19 @@ int mbrMapPop(device *mbDev, char *key, char *value){
  * @param  key Data tuple ID to find
  * @return _mbrTupleNode|NULL
  */
-char *mbrPeekValue(const _mbrNode *cn, const char *key){
-  _mbrDataNode *current = cn->_head;
-  while (current) {
-    if( strcmp(current->key, key) == 0 ) { 
-      char *v = (char*)malloc(strlen(current->value));
+char *mbrPeekValue(_mbr *mbr, char *key){
+  assert(mbr && key);
+  while (mbr->_curr) {
+    if( strcmp(mbr->_curr->_key, key) == 0 ) { 
+      char *v = (char*)malloc(strlen(mbr->_curr->_value));
       assert(v);
-      strcpy(v, current->value);
+      strcpy(v, mbr->_curr->_value);
+      mbr->_curr = mbr->_head;
       return v; 
     }
-    current = current->next;
+    mbr->_curr = mbr->_curr->_next;
   }
+  mbr->_curr = mbr->_head;
   return NULL;
 };
 
@@ -254,17 +254,17 @@ char *mbrPeekValue(const _mbrNode *cn, const char *key){
  * @return done|failure
  */
 int freeDeviceMap(device *dev){
-  _mbrNode *mbrNodeTmp = NULL, *mbrNode = dev->headMap;
-  while (mbrNode) {
-    _mbrDataNode *tNodeTmp=NULL, *tNode=mbrNode->_head;    
-    while (tNode) {
-      tNodeTmp = tNode;
-      tNode = tNode->next;
-      free(tNodeTmp->key);
-      free(tNodeTmp->value);
-    }  
-   dev->currMapMbr =dev->currMapMbr->next;
-    free(mbrNodeTmp);
-  };
+//  _mbrNode *mbrNodeTmp = NULL, *mbrNode = dev->headMap;
+//  while (mbrNode) {
+//    _mbrMap *tNodeTmp=NULL, *tNode=mbrNode->_head;    
+//    while (tNode) {
+//      tNodeTmp = tNode;
+//      tNode = tNode->next;
+//      free(tNodeTmp->key);
+//      free(tNodeTmp->value);
+//    }  
+//   dev->currMapMbr =dev->currMapMbr->next;
+//    free(mbrNodeTmp);
+//  };
   return done;
 }
