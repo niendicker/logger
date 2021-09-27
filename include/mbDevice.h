@@ -80,7 +80,7 @@ typedef struct __rtu{
 } _rtu;
 
 typedef struct __link{
-   char* protocol;
+   uint16_t protocol;
    _tcp modbusTcp;
    _rtu modbusRtu;
 } _link;
@@ -92,27 +92,32 @@ typedef struct __dn{  /* Generic data node for single linked list */
 } _dn; 
 
 typedef struct __config { /* Configurations single linked list dts */
-  _dn *_head;
-  _dn *_curr;
+  _dn *_data;
   struct __config *_next;
 } _config;
 
 typedef struct __mbr { /* Modbus Registers Map single linked list dts */
   int16_t  lastValid; /* Keep the last value successfull readded from device */
-  _dn *_head;
-  _dn *_curr;
+  _dn *_data;
   struct __mbr *_next;
 } _mbr;
 
 typedef struct __dev{
   _link link;    /* Data to connect to device */
-  _config *_headConfig;
-  _config *_currConfig;
-  _mbr *_headMbr;
-  _mbr *_currMbr;
+  _config *config;
+  _mbr *mbr;
   char *txADU;
   char *rxADU;
 } device;
+
+/**
+ * @brief Convert/Store all "non string" values on current context for fastest access
+ *
+ * @param mbDevice Context with data needed to load and update 
+ *                  registers from remote server/slave modbus device 
+ * @return device|NULL
+ */
+int deviceSetCtx(device *mbDevice);
 
 /**
  * @brief Load all device parameters
@@ -121,7 +126,7 @@ typedef struct __dev{
  * @param filePath Path to device configuration file
  * @return device|failure
  */
-device* deviceConfig(device* dev, const char* filePath);
+device* deviceConfigure (device* dev, const char* filePath);
 
 /**
  * @brief  Print device configuration parameters
@@ -164,7 +169,7 @@ int showDeviceMap(device *dev);
  * @brief  Insert mbr touple into current register
  * @return done|NULL
  */
-int mbrMapPop(device *dev, char *key, char *value);
+int mbrMapPushData(_mbr *mbr, char *key, char *value);
 
 /**
  * @brief  Find and return some modbus register key and value tuple

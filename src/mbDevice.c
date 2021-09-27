@@ -16,66 +16,53 @@ int deviceInit(device *dev){
   return done;
 };
 
+/**
+ * @brief Convert/Store all "non string" values on current context for fastest access
+ */
 int deviceSetCtx(device *mbDevice){
-  assert( mbDevice && mbDevice->_currConfig );
-  _config *currConfing = mbDevice->_currConfig;
-  strcpy ( mbDevice->link.protocol, confValue(currConfing, protocol) );
-  strcpy ( mbDevice->link.modbusTcp.ipAddress, confValue(currConfing, ipAddress) );
-  strcpy ( mbDevice->link.modbusTcp.hostname, confValue(currConfing, hostname) );
-  mbDevice->link.modbusTcp.port        = (uint16_t)strtol( confValue( currConfing, port      ) , NULL, 10);
-  mbDevice->link.modbusTcp.msTimeout   = (uint16_t)strtol( confValue( currConfing, msTimeout ) , NULL, 10);
-  mbDevice->link.modbusRtu.unitAddress = (uint8_t)strtol(  confValue( currConfing, unitAddress ) , NULL, 10);
-  mbDevice->link.modbusRtu.baudRate    = (uint16_t)strtol( confValue( currConfing, baudRate  ) , NULL, 10);
-  mbDevice->link.modbusRtu.dataBits    = (uint8_t)strtol(  confValue( currConfing, dataBits    ) , NULL, 10);
-  mbDevice->link.modbusRtu.stopBits    = (uint8_t)strtol(  confValue( currConfing, stopBits    ) , NULL, 10);
-  mbDevice->link.modbusRtu.parity      = (uint8_t)strtol(  confValue( currConfing, parity      ) , NULL, 10);
-  mbDevice->link.modbusRtu.handshake   = (uint8_t)strtol(  confValue( currConfing, handshake   ) , NULL, 10);
+  assert( mbDevice && mbDevice->config );
+  _config *config = mbDevice->config;
+  mbDevice->link.protocol              = (uint16_t) strtol( confValue( config, protocol   ), NULL, 10 );
+  mbDevice->link.modbusTcp.port        = (uint16_t) strtol( confValue( config, port       ), NULL, 10 );
+  mbDevice->link.modbusTcp.msTimeout   = (uint16_t) strtol( confValue( config, msTimeout  ), NULL, 10 );
+  mbDevice->link.modbusRtu.unitAddress = (uint8_t ) strtol( confValue( config, unitAddress), NULL, 10 );
+  mbDevice->link.modbusRtu.baudRate    = (uint16_t) strtol( confValue( config, baudRate   ), NULL, 10 );
+  mbDevice->link.modbusRtu.dataBits    = (uint8_t ) strtol( confValue( config, dataBits   ), NULL, 10 );
+  mbDevice->link.modbusRtu.stopBits    = (uint8_t ) strtol( confValue( config, stopBits   ), NULL, 10 );
+  mbDevice->link.modbusRtu.parity      = (uint8_t ) strtol( confValue( config, parity     ), NULL, 10 );
+  mbDevice->link.modbusRtu.handshake   = (uint8_t ) strtol( confValue( config, handshake  ), NULL, 10 );
   return done;
 }
 
 /**
  * @brief Load all device parameters
- *
- * @param mbDevice Save configuration here
- * @param filePath Path to device configuration file
- * @return device|NULL
  */
-device *deviceConfig(device* mbDevice, const char* filePath){
+device *deviceConfigure(device* mbDevice, const char* filePath){
   assert(mbDevice && filePath);
   FILE* deviceConf = fopen(filePath, "r");
-  if( !deviceConf ){
-#ifndef NDEBUG
-    printf("Error: Can't open device configuration file\n");
-#endif
-    return NULL;
-   }
+  assert(deviceConf);
   char keyValue[200];
-  mbDevice->_currConfig = (_config*)malloc(sizeof(_config*));
-  assert(mbDevice->_currConfig);
-  mbDevice->_currConfig->_next = NULL;
-  for( int line = 1; fgets(keyValue, sizeof(keyValue), deviceConf) != NULL; line++){
+  _config *newConfig = (_config*)malloc(sizeof(_config));
+  assert(newConfig);
+  for( int line = 1; fgets(keyValue, sizeof(keyValue), deviceConf) != NULL; line++){ /* search for key = value lines on file */
     if( IGNORE( keyValue[0] ) ) continue; /* Comment or bad format */
     char* token = strtok(keyValue, "= ");
-    if( token == NULL ) { /* Bad [ token = value ] line format */
-      return NULL;
-    }
+    assert(token);
     char* value = strtok( NULL, "= " );
-    if( value == NULL ) {
-      return NULL;
-    }
-    value[ strcspn(value, "\n") ] = '\0'; /* Remove new line from value */  
-    mbDevice->_currConfig = (_config*)malloc(sizeof(_config*));
-    mbDevice->_currConfig->_head->_key = (char *)malloc(strlen(token));
-    mbDevice->_currConfig->_head->_value = (char *)malloc(strlen(value));
-    assert(mbDevice->_currConfig->_head);
-    assert(mbDevice->_currConfig->_head->_key);
-    assert(mbDevice->_currConfig->_head->_value);
-    strcpy(mbDevice->_currConfig->_head->_key, token);
-    strcpy(mbDevice->_currConfig->_head->_value, value);
-    mbDevice->_currConfig->_head->_next = mbDevice->_currConfig->_head;    
+    assert(value);
+    value[ strcspn(value, "\n") ] = '\0'; /* Remove new line from value  */  
+    _dn *data = (_dn*)malloc(sizeof(_dn));
+    data->_key = (char*)malloc(strlen(token));
+    assert(data->_key);
+    data->_value = (char*)malloc(strlen(value));
+    assert(data->_value);
+    strcpy(data->_key, token);
+    strcpy(data->_value, value);
+    data->_next = newConfig->_data;
+    newConfig->_data = data;
   } /* File scan */
-  mbDevice->_currConfig->_next = mbDevice->_currConfig;
-  mbDevice->_headConfig = mbDevice->_currConfig;
+  newConfig->_next = mbDevice->config;
+  mbDevice->config = newConfig;
   deviceSetCtx(mbDevice);
   fclose(deviceConf);
   return(mbDevice);
@@ -83,41 +70,35 @@ device *deviceConfig(device* mbDevice, const char* filePath){
 
 /**
  * @brief  Print device configuration parameters
- * @param  dev Modbus device 
- * @return done|failure
  */
 int showDeviceConf(device *dev){
-  assert(dev && dev->_currConfig); 
+  assert(dev && dev->config); 
   printf("Info: Device configuration\n");
-  while (dev->_currConfig->_curr){
-    char * key = (char*)dev->_currConfig->_curr->_key;
-    char * value = (char*)dev->_currConfig->_curr->_value;
+  _config *_c = dev->config; 
+  while (_c->_data->_key){
+    char * key = (char*)_c->_data->_key;
+    char * value = (char*)_c->_data->_value;
     printf("%s: %s\n", key, value);
-    dev->_currConfig->_curr = dev->_currConfig->_curr->_next;
+    _c->_data = _c->_data->_next;
   }  
-  dev->_currConfig->_curr = dev->_currConfig->_head; /* Restore head  */
   return done;
 };
 
 /**
  * @brief  Find and return some device configuration key and value tuple
- * @param  cn C_onfiguration N_ode to get the value
- * @param  key Data ID to fetch the current data value
- * @return char*|NULL
  */
 char *confPeekValue(_config *config, char *key){
   assert(config && key);
-  while (config->_curr) {
-    if( strcmp(config->_curr->_key, key) == 0 ) { 
-      char *v = (char*)malloc(strlen(config->_curr->_value));
+  _config *_c = config; 
+  while (_c->_data->_key) {
+    if( strcmp((char*)_c->_data->_key, key) == 0 ) { 
+      char *v = (char*)malloc(strlen(_c->_data->_value));
       assert(v);
-      strcpy(v, config->_curr->_value);
-      config->_curr = config->_head;
+      strcpy(v, _c->_data->_value);
       return v; 
     }
-    config->_curr = config->_curr->_next;
+    _c->_data = _c->_data->_next;
   }
-  config->_curr = config->_head;
   return NULL;
 };
 
@@ -149,7 +130,7 @@ int freeDeviceConf(device *dev){
  */
 device *deviceMap(device *dev){
   assert(dev);
-  FILE *deviceMap = fopen(confValue(dev->_currConfig, mapFile), "r");
+  FILE *deviceMap = fopen(confValue(dev->config, mapFile), "r");
   if( !deviceMap ) {
     printf("Error: Can't open device registers map file");
     return NULL;
@@ -158,8 +139,8 @@ device *deviceMap(device *dev){
     if( ( IGNORE( _kv[0] ) ) || ( ! TOKEN_KEY_MATCH( _kv, startTag) ) ) {
          continue; /* Comments */
     }/* Found a register start tag */
-    dev->_currMbr = (_mbr*)malloc(sizeof(_mbr*)); /* Create a new register */
-    assert(dev->_currMbr); 
+    _mbr *newMbr = (_mbr*)malloc(sizeof(_mbr)); /* Create a new register */
+    assert(newMbr); 
     for( int i = 0; i < _lastTuple_; i++) {  
       if( ( fgets( _kv, sizeof(_kv), deviceMap ) == NULL ) ||
           ( IGNORE( _kv[0] ) ) ) { /*INVALID characters aren't allowed. Abort scanning... */
@@ -167,20 +148,14 @@ device *deviceMap(device *dev){
         return NULL;
       }
       char* token = strtok(_kv, "= ");
-      if( !token ){
-        printf("Error: Invalid modbus register parameter: %s\n", _kv);
-        return NULL;
-      }
+      assert(token);
       char *value = strtok(NULL, "= ");
-      if (value == NULL) { /* possible invalid [key = value] line */
-        printf("Error: Invalid modbus register parameter value: %s\n", _kv);
-        return NULL;
-      }
+      assert(value);
       value[strcspn(value, "\n")] = '\0'; /* Remove new line from value */
-      mbrMapPop(dev, token, value);
+      mbrMapPushData(newMbr , token, value);
     } 
-    dev->_currMbr->_next = dev->_currMbr;
-    dev->_headMbr = dev->_currMbr;
+    newMbr->_next = dev->mbr;
+    dev->mbr = newMbr;
   } /* Scan entire file for registers data blocks */
   fclose(deviceMap);
   return(dev);
@@ -193,36 +168,82 @@ device *deviceMap(device *dev){
  */
 int showDeviceMap(device *dev) {
   assert(dev);
-  while(dev->_currMbr){
+  _mbr *mbr = dev->mbr;
+  while(mbr){
     printf("\nInfo: Modbus Register\n");
-    while (dev->_currMbr->_curr){
-      char * key = (char*)dev->_currMbr->_curr->_key;
-      char * value = (char*)dev->_currMbr->_curr->_value;
+    while (mbr->_data->_key){
+      char * key = (char*)mbr->_data->_key;
+      char * value = (char*)mbr->_data->_value;
       printf("%s:%s|", key, value);
-      dev->_currMbr->_curr = dev->_currMbr->_curr->_next;
+      mbr->_data = mbr->_data->_next;
     }
-    dev->_currMbr = dev->_currMbr->_next;
+    mbr = mbr->_next;
   }
   puts("\n");
   return done;
 };
 
+typedef struct __ln {
+  _dn *data;
+  struct __ln *next;
+} _ln;
+
 /**
- * @brief  Insert mbr touple into current register
+ * @brief  Insert data into head of current mb register 
  * @return done|NULL
  */
-int mbrMapPop(device *dev, char *key, char *value){
-  assert(dev && key && value);
-  _dn *dn = (_dn*)malloc(sizeof(_dn*));
-  assert(dn);
-  dn->_key = (char*)malloc(strlen(key));
-  assert(dn->_key);
-  dn->_value = (char*)malloc(strlen(value));
-  assert(dn->_value);
-  strcpy(dn->_key, key);
-  strcpy(dn->_value, value);
-  dn->_next = dev->_currMbr->_head;
-  dev->_currMbr->_head = dn;
+int pushData(_ln *listNode, void *key, void *value){
+  assert(listNode && key && value);
+  _dn *newData = (_dn*)malloc(sizeof(_dn));
+  assert(newData);
+  newData->_key = (char*)malloc(strlen(key));
+  assert(newData->_key);
+  newData->_value = (char*)malloc(strlen(value));
+  assert(newData->_value);
+  strcpy(newData->_key, key);
+  strcpy(newData->_value, value);
+  newData->_next = listNode->data;
+  listNode->data = newData;
+  return done;
+};
+
+/**
+ * @brief  Insert a new node into head of list nodes 
+ * @return done|NULL
+ */
+int pushNode(_ln *listNode, void *key, void *value){
+  assert(listNode && key && value);
+  _ln *newNode = (_ln*)malloc(sizeof(_ln));
+  assert(newNode);
+  newNode->data = (_dn*)malloc(sizeof(_dn));
+  assert(newNode->data);
+  newNode->data->_key = (char*)malloc(strlen(key));
+  assert(newNode->data->_key);
+  newNode->data->_value = (char*)malloc(strlen(value));
+  assert(newNode->data->_value);
+  strcpy(newNode->data->_key, key);
+  strcpy(newNode->data->_value, value);
+  newNode->next = listNode;
+  listNode = newNode;
+  return done;
+};
+
+/**
+ * @brief  Insert data into head of current mb register 
+ * @return done|NULL
+ */
+int mbrMapPushData(_mbr *mbr, char *key, char *value){
+  assert(mbr && key && value);
+  _dn *newData = (_dn*)malloc(sizeof(_dn));
+  assert(newData);
+  newData->_key = (char*)malloc(strlen(key));
+  assert(newData->_key);
+  newData->_value = (char*)malloc(strlen(value));
+  assert(newData->_value);
+  strcpy(newData->_key, key);
+  strcpy(newData->_value, value);
+  newData->_next = mbr->_data;
+  mbr->_data = newData;
   return done;
 };
 
@@ -234,17 +255,16 @@ int mbrMapPop(device *dev, char *key, char *value){
  */
 char *mbrPeekValue(_mbr *mbr, char *key){
   assert(mbr && key);
-  while (mbr->_curr) {
-    if( strcmp(mbr->_curr->_key, key) == 0 ) { 
-      char *v = (char*)malloc(strlen(mbr->_curr->_value));
+  _dn *data = mbr->_data;
+  while (data->_key){
+    if( strcmp(data->_key, key) == 0 ) { 
+      char *v = (char*)malloc(strlen(data->_value));
       assert(v);
-      strcpy(v, mbr->_curr->_value);
-      mbr->_curr = mbr->_head;
+      strcpy(v, mbr->_data->_value);
       return v; 
     }
-    mbr->_curr = mbr->_curr->_next;
+    data = data->_next;
   }
-  mbr->_curr = mbr->_head;
   return NULL;
 };
 

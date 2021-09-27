@@ -41,7 +41,7 @@ mbCtx * mbLoadConf(const char * filePath) {
   assert(filePath);
   mbCtx * ctx = (mbCtx * ) malloc(sizeof(mbCtx));
   assert(ctx);
-  if ( !deviceConfig( &ctx->dev, filePath) ) { return NULL; }
+  if ( !deviceConfigure( &ctx->dev, filePath) ) { return NULL; }
   return ctx;
 };
 
@@ -87,11 +87,11 @@ int mbTcpConnect(mbCtx *ctx) {
   assert(ctx && (ctx->dev.link.modbusTcp.socket == failure));
   ctx->dev.link.modbusTcp.socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
   assert(ctx->dev.link.modbusTcp.socket);
-  char *ip = confValue(ctx->dev._currConfig, slaveTcpAddr);
+  char *ip = confValue(ctx->dev.config, slaveTcpAddr);
   assert(ip);
   char *hostAddr;
   if(strlen(ip) != (sizeof("MOD.BUS._PO.LL_")-1)){ /* if IP address is configured don't perform DNS translation */
-    char *hostname = confValue(ctx->dev._currConfig, slaveTcpHostname);
+    char *hostname = confValue(ctx->dev.config, slaveTcpHostname);
     assert(hostname);
     hostAddr = htoip(hostname); /* DNS translation. Resolve hostname => IP address */
     assert(hostAddr);
@@ -104,11 +104,11 @@ int mbTcpConnect(mbCtx *ctx) {
   mbServer.sin_family = AF_INET;  
   mbServer.sin_port = htons(ctx->dev.link.modbusTcp.port);
 #ifndef NDEBUG
-  printf("Info: Connecting to %s @%s:%d \n", confValue(ctx->dev._currConfig, tag), hostAddr, ctx->dev.link.modbusTcp.port);
+  printf("Info: Connecting to %s @%s:%d \n", confValue(ctx->dev.config, tag), hostAddr, ctx->dev.link.modbusTcp.port);
 #endif
   if (connect(ctx->dev.link.modbusTcp.socket, (struct sockaddr *)&mbServer, sizeof(mbServer)) == failure) {
 #ifndef NDEBUG
-    printf("Error: Connection refused from %s \n", confValue(ctx->dev._currConfig, tag));
+    printf("Error: Connection refused from %s \n", confValue(ctx->dev.config, tag));
 #endif
     return failure;
   } 
@@ -264,9 +264,9 @@ int mbParseReply(mbCtx *ctx){
   for (uint8_t i = 0; i < plSz; i++) {
     data[i] = ctx->dev.rxADU[ _replyData + i ];
   }
-  ctx->dev._currMbr->lastValid = (uint16_t)strtol(data, NULL, 10);
+  ctx->dev.mbr->lastValid = (uint16_t)strtol(data, NULL, 10);
 #ifndef NDEBUG
-  printf("Info: New value %d \n", ctx->dev._currMbr->lastValid);
+  printf("Info: New value %d \n", ctx->dev.mbr->lastValid);
 #endif  
   return done;
 };
@@ -279,9 +279,9 @@ int mbInitMbap(mbCtx *ctx) {
   uint16_t tID, pID, fBytes;
   uint8_t uID;
   tID    = (uint16_t)rand();
-  pID    = (uint16_t)strtol(confValue(ctx->dev._currConfig, protocol) , NULL, 10);
+  pID    = (uint16_t)strtol(confValue(ctx->dev.config, protocol) , NULL, 10);
   fBytes = _adu_size_ - _uID;
-  uID = (uint8_t)strtol(confValue(ctx->dev._currConfig, unitAddress) , NULL, 10);
+  uID = (uint8_t)strtol(confValue(ctx->dev.config, unitAddress) , NULL, 10);
   ctx->dev.txADU[ _tIDLsb ] = (uint8_t)LTOS_LSB(tID); /* BEGIN QUERY FRAME */
   ctx->dev.txADU[ _tIDMsb ] = (uint8_t)LTOS_MSB(tID);
   ctx->dev.txADU[ _pIDLsb ] = (uint8_t)LTOS_LSB(pID);
@@ -300,8 +300,8 @@ int mbInitMbap(mbCtx *ctx) {
  * @brief  Initialize the PDU of ADU
 **/
 int mbInitPdu(mbCtx *ctx) {
-  assert(ctx && ctx->dev._currMbr);
-  _mbr *mbr = ctx->dev._currMbr;
+  assert(ctx && ctx->dev.mbr);
+  _mbr *mbr = ctx->dev.mbr;
   uint8_t fCode = (uint8_t)strtol(mbrValue(mbr, functionCode) , NULL, 10);
   uint16_t mbrAddress = (uint16_t)strtol(mbrValue(mbr, mbrAddress) , NULL, 10);
   uint16_t mbrSize = (uint16_t)strtol(mbrValue(mbr,   size) , NULL, 10);
@@ -320,7 +320,7 @@ int mbInitPdu(mbCtx *ctx) {
  * @brief  Send request to a modbus device
 **/
 int mbSendRequest(mbCtx *ctx){
-  assert(ctx && ctx->dev.link.modbusTcp.socket && ctx->dev._currMbr);
+  assert(ctx && ctx->dev.link.modbusTcp.socket && ctx->dev.mbr);
   mbInitMbap(ctx); /* copy data from internal structure to txVector */
   mbInitPdu(ctx);
 #ifndef NDEBUG
@@ -396,14 +396,14 @@ int mbGetReply(mbCtx *ctx) {
  * @brief  Update context device modbus registers (MBR)
 **/
 int mbUpdate(mbCtx *ctx) {
-  assert(ctx && ctx->dev._headMbr);
+  assert(ctx && ctx->dev.mbr);
   uint8_t commFailure = 0;
-  while(ctx->dev._currMbr){ 
+  _mbr *mbr = ctx->dev.mbr;
+  while(mbr){ 
     if ( mbSendRequest(ctx) == failure || mbGetReply(ctx) == failure ) { /* Dont call mbGetReply if mbSendRequest fails */
       mbTcpReconnect(ctx);
     }
-    ctx->dev._currMbr = ctx->dev._currMbr->_next;
+    mbr = mbr->_next;
   }
-  ctx->dev._currMbr = ctx->dev._headMbr;
   return( commFailure?( failure ):( done ) );
 };
