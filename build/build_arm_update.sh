@@ -1,5 +1,6 @@
 #! /bin/bash
 
 ##? BUILD ARM
-bash ./build_arm.sh && bash ./update_arm.sh
+pwd
+bash ./arm_build.sh && ./update_arm.sh
 
