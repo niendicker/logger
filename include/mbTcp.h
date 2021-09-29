@@ -26,6 +26,11 @@
 #include <netdb.h>	    /* hostent */
 #include "errorCtrl.h"
 #include "mbDevice.h"
+#include "postgresql.h"
+
+enum polling{
+  min_timeout_ms=100
+};
 
 enum mbFunctionCode {       /* Just supported                  */
   readCoils = 1,            /* Device digital inputs           */
@@ -172,7 +177,7 @@ int mbTcpReconnect(mbCtx *ctx);
  * @param filePath Path to device configuration file
  * @return bmCtx|NULL
  */
-mbCtx * mbLoadConf(const char * filePath);
+mbCtx * mbConfigure(const char * filePath);
 
 /**
  * @brief Print device configuration
@@ -180,13 +185,6 @@ mbCtx * mbLoadConf(const char * filePath);
  * @return done|failure
  */
 int mbShowConf(mbCtx *ctx);
-
-/**
- * @brief Load all device's registers map metadata
- * @param ctx With device's modbus registers metadata filepath
- * @return ctx|NULL
- */
-mbCtx *mbLoadMap(mbCtx *ctx);
 
 /**
  * @brief  Print device registers map information
@@ -206,14 +204,14 @@ char *htoip(char *hostname);
 * @param txVector The vector used for transmit the modbus query
 * @return next index on txVector | failure
 */
-int mbInitMbap(mbCtx *ctx);
+int mbInitMBAP(mbCtx *ctx);
 
 /**
  * @brief  Initialize the PDU of ADU
  * @param  ctx Context with current register with data for PDU.
  * @return done
  */
-int mbInitPdu(mbCtx *ctx);
+int mbInitPDU(mbCtx *ctx);
 
 /**
  * @brief  Send request to a modbus device

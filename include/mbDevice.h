@@ -18,6 +18,7 @@
 #include <string.h>
 #include <stdint.h>
 #include "errorCtrl.h"
+#include "linkedlist.h"
 // /#include "mbTcp.h"
 
 #define   FOREACH_CONFIG_DATA_KEY( CONFIG_DATA_KEY )  \
@@ -60,8 +61,8 @@ enum mbrDataKeys{
 #define IGNORE(C) ( ((C<'A'||C>'Z') && (C<'a'||C>'z')) || (C == '\n')  )
 #define TOKEN_KEY_MATCH(str1,str2) ( strcmp( str1, str2 ) == 0 )
 
-#define confValue(cNode,key)  ( confPeekValue( cNode,#key ) )
-#define mbrValue(mbrNode,key) ( mbrPeekValue( mbrNode,#key ) )
+#define confValue(config,key)  ( peekValue( config, (char*)#key ) )
+#define mbrValue(mbr,key) ( peekValue( mbr, (char*)#key ) )
 
 #define startTag ("MB_REGISTER_START\n")
 
@@ -80,39 +81,34 @@ typedef struct __rtu{
 } _rtu;
 
 typedef struct __link{
-   char* protocol;
+   uint16_t protocol;
    _tcp modbusTcp;
    _rtu modbusRtu;
 } _link;
 
-typedef struct __dn{  /* Generic data node for single linked list */
-  void *_key;
-  void *_value;
-  struct __dn  *_next;
-} _dn; 
-
-typedef struct __config { /* Configurations single linked list dts */
-  _dn *_head;
-  _dn *_curr;
-  struct __config *_next;
-} _config;
-
 typedef struct __mbr { /* Modbus Registers Map single linked list dts */
   int16_t  lastValid; /* Keep the last value successfull readded from device */
-  _dn *_head;
-  _dn *_curr;
-  struct __mbr *_next;
+  _dn *data;
+  struct __mbr *next;
 } _mbr;
 
 typedef struct __dev{
-  _link link;    /* Data to connect to device */
-  _config *_headConfig;
-  _config *_currConfig;
-  _mbr *_headMbr;
-  _mbr *_currMbr;
+  _link link;    /* Connection context data - ipAddress, hostname, unitID, ADU, PDU, ... */
+  _ln *config; /* Device context configuration - ^.........^.........^......^....^......,
+                  Device mbr map descriptor file path, etc... */
+  _ln *mbr;
   char *txADU;
   char *rxADU;
 } device;
+
+/**
+ * @brief Convert/Store all "non string" values on current context for fastest access
+ *
+ * @param mbDevice Context with data needed to load and update 
+ *                  registers from remote server/slave modbus device 
+ * @return device|NULL
+ */
+int deviceSetCtx(device *mbDevice);
 
 /**
  * @brief Load all device parameters
@@ -121,7 +117,7 @@ typedef struct __dev{
  * @param filePath Path to device configuration file
  * @return device|failure
  */
-device* deviceConfig(device* dev, const char* filePath);
+device* deviceConfigure (device* dev, const char* filePath);
 
 /**
  * @brief  Print device configuration parameters
@@ -129,14 +125,6 @@ device* deviceConfig(device* dev, const char* filePath);
  * @return done|failure
  */
 int showDeviceConf(device *dev);
-
-/**
- * @brief  Find and return some device configuration key and value tuple
- * @param  conf Configuration to get the value
- * @param  key Data tuple ID to find
- * @return _confTupleNode|NULL
- */
-char *confPeekValue(_config *config, char *key);
 
 /**
  * @brief  Free all dynamic memory allocated
@@ -159,20 +147,6 @@ device *deviceMap(device *dev);
  * @return done|failure
  */
 int showDeviceMap(device *dev);
-
-/**
- * @brief  Insert mbr touple into current register
- * @return done|NULL
- */
-int mbrMapPop(device *dev, char *key, char *value);
-
-/**
- * @brief  Find and return some modbus register key and value tuple
- * @param  mbr Modbus device register with all parameters tuples
- * @param  key Data tuple ID to find
- * @return value|NULL
- */
-char *mbrPeekValue(_mbr *mbr, char *key);
 
 /**
  * @brief  Free all dynamic memory allocated

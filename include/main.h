@@ -17,6 +17,7 @@
 #include <stdbool.h>
 #include "errorCtrl.h"
 #include "mbTcp.h"
+#include "postgresql.h"
 
 #define MIN_POLL_TIME 100 //ms
 

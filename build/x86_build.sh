@@ -15,13 +15,6 @@ do
   ((index=index+1))
 done
 
-#Create tmp symbolic links for each header file
-#for headerFile in "$include_home"/*
-#do
-#  ln -s "$headerFile" "$sources_home"
-#done
-
-#Compile and Link for x86 architecture
 #Debug version 
 echo gcc -Wall -g -o "${bin_output}_dbg.bin" -I "$include_home" "${sourceFiles[@]}"
 gcc -Wall -g -o "${bin_output}_dbg.bin" -I "$include_home" "${sourceFiles[@]}" && \
@@ -31,9 +24,3 @@ echo "Debug version copilled successful"
 echo gcc -Wall -g -o "${bin_output}.bin" -I "$include_home" "${sourceFiles[@]}"
 gcc -D NDEBUG -Wall -g -o "${bin_output}.bin" -I "$include_home" "${sourceFiles[@]}" && \
 echo "Production version copilled successful"
-
-#Remove tmp header files symbolic links
-#for headerFile in "${sources_home}"/*.h
-#do
-#  rm "$headerFile"
-#done

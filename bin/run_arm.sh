@@ -28,7 +28,7 @@ if [ "$2" -ne 0 ];
 then #RUN DEBUG VERSION
   echo "Loading instance $instances in debug mode..."
   cd ../bin &&            \
-  ./modbusPoll_dbg.elf    \
+  ./modbusPoll_dbg.arm    \
   "${configFile}"         \
   "${pollingInterval_ms}" \
   "${pollingIteractions}" \
@@ -39,7 +39,7 @@ else #RUN PRODUCTION VERSION
   echo "Loading instance $instances in production mode..."
   cd ../bin &&            \
   nohup                   \
-  ./modbusPoll.elf        \
+  ./modbusPoll.arm        \
   "${configFile}"         \
   "${pollingInterval_ms}" \
   "${pollingIteractions}" \
