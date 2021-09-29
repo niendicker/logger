@@ -31,12 +31,6 @@ int pushNode(_ln *listNode){
   assert(newNode);
   newNode->data = (_dn*)malloc(sizeof(_dn));
   assert(newNode->data);
-//  newNode->data->key = (char*)malloc(strlen(key));
-//  assert(newNode->data->key);
-//  newNode->data->value = (char*)malloc(strlen(value));
-//  assert(newNode->data->value);
-//  strcpy(newNode->data->key, key);
-//  strcpy(newNode->data->value, value);
   newNode->next = listNode;
   listNode = newNode;
   return 0;
@@ -44,8 +38,6 @@ int pushNode(_ln *listNode){
 
 /**
  * @brief  Find and return some modbus register key and value tuple
- * @param  mbr Modbus device register with all parameters tuples
- * @param  key Data tuple ID to find
  * @return _mbrTupleNode|NULL
  */
 char *peekValue(_ln *listNode, char *key){
@@ -60,6 +52,9 @@ char *peekValue(_ln *listNode, char *key){
   return ((char*)"0");
 };
 
+/**
+ * @brief  Print to stdout the data of a given list node
+ */
 void listNode(_ln *listNode){
   assert(listNode);
   _ln *ln = listNode; 
@@ -73,6 +68,9 @@ void listNode(_ln *listNode){
   }
 };
 
+/**
+ * @brief  Delete the data specified by key on any list node
+ */
 void deleteData(_ln *listNode, const char *key){
   _dn *dn = listNode->data;
   _dn *prev = dn;
@@ -90,6 +88,9 @@ void deleteData(_ln *listNode, const char *key){
   }
 };
 
+/**
+ * @brief  Delete the first node that contains the specified key in data 
+ */
 void deleteNode(_ln *listNode, const char *key){
   _ln *ln = listNode;
   assert(ln && key);

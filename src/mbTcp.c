@@ -83,10 +83,10 @@ int mbTcpConnect(mbCtx *ctx) {
   if(strlen(ipAddress) != (sizeof("MOD.BUS._PO.LL_")-1)){ /* Invalid IP. Trying DNS translation from hostname */
     char *hostname = confValue(ctx->dev.config, hostname);
     assert(hostname);
-    free(ipAddress);
-    ipAddress = htoip(hostname); /* DNS translation. Resolve hostname => IP address */
+    ipAddress = (char*)realloc(ipAddress, sizeof("MOD.BUS._PO.LL_"));
     assert(ipAddress);
-    free(hostname);
+    strcpy(ipAddress, htoip(hostname)); /* DNS translation. Resolve hostname => IP address */
+    assert(ipAddress);
   }
   struct sockaddr_in mbServer; /* Set connection parameters */
   mbServer.sin_addr.s_addr = inet_addr(ipAddress);
@@ -353,6 +353,7 @@ int mbGetReply(mbCtx *ctx) {
 #endif
     return failure;    
   }
+  storePing(confValue(ctx->dev.config, tag), replyDelay);
   uint8_t replySize = recv(ctx->dev.link.modbusTcp.socket, ctx->dev.rxADU, _adu_size_, MSG_DONTWAIT);
 #ifndef NDEBUG
   _mbReplyRaw(ctx);
@@ -360,7 +361,7 @@ int mbGetReply(mbCtx *ctx) {
 #endif 
   if( replySize < (reply_exception) ) { /* Unknown modbus reply */
 #ifndef NDEBUG
-    puts("Error: Unknown modbus reply");
+    puts("Error: Unknown modbus reply \n");
     puts("Error: To short reply");
 #endif
     return failure;
@@ -376,7 +377,7 @@ int mbGetReply(mbCtx *ctx) {
   }
 #ifndef NDEBUG
   puts("Error: Unknown modbus reply");
-  puts("Error: Are you connected to a modbus device?");
+  puts("Error: Are you connected to a modbus device?\n");
 #endif 
   return failure;
 };

@@ -40,7 +40,7 @@ int main(int argc , char *argv[]) {
   for (int poll = -1, eCount = 0; true ; ) { /* until communication error is below the threshold received from argv[3] */
     poll = (pollCount > 0) ? poll+1 : -1; /* 0 means polling forever */
     if(poll < pollCount){
-      eCount = (mbUpdate(mbDevice) == failure) ? eCount+1 : 0; 
+      eCount = ((mbUpdate(mbDevice) == failure) && eThreshold > 0) ? eCount+1 : 0; 
     }
     else {
 #ifndef NDEBUG
@@ -48,14 +48,15 @@ int main(int argc , char *argv[]) {
 #endif
       break;
     }
-    if (eCount >= eThreshold) {
+    if (eCount >= (eThreshold+1)) {
 #ifndef NDEBUG 
       printf("\nError: Polling terminated due to communication error limit\n");
 #endif
       break;
     }
-    if( ( pollCount == 0 ) || (poll < (pollCount -1)) )
+    if( ( pollCount == 0 ) || (poll < (pollCount -1)) ){
       usleep(pollDelay * 1000);
+    }
   } /* polling */
   mbClose(mbDevice);
   exit(EXIT_SUCCESS);

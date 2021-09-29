@@ -7,7 +7,7 @@
 configFile="./dev/gc600.conf"
 pollingInterval_ms=500
 pollingIteractions=0 
-pollingErrorMax=3
+pollingErrorMax=0
 maxInstances=50
 
 if [ $# -lt 2 ]; 
@@ -28,19 +28,17 @@ if [ "$2" -ne 0 ];
 then #RUN DEBUG VERSION
   
   echo "Loading instance $instances in debug mode..."
-  cd ../bin &&            \
+  cd ./00_rpi/bin &&      \
   ./modbusPoll_dbg.bin    \
   "${configFile}"         \
   "${pollingInterval_ms}" \
   "${pollingIteractions}" \
-  "${pollingErrorMax}"    \
-  &                       \
-  disown
+  "${pollingErrorMax}"    
 
 else #RUN PRODUCTION VERSION
   
   echo "Loading instance $instances in production mode..."
-  cd ../bin &&            \
+  cd ./00_rpi/bin &&      \
   nohup                   \
   ./modbusPoll.bin        \
   "${configFile}"         \

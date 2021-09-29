@@ -52,14 +52,23 @@ int pushData(_ln *listNode, char *key, char *value);
 char *peekValue(_ln *listNode, char *key);
 
 /**
- * @brief  Print to stdout the data of a list node
+ * @brief  Print to stdout the data of a given list node
  */
 void listNode(_ln *listNode);
 
+/**
+ * @brief  Delete the data specified by key on any list node
+ */
 void deleteData(_ln *listNode, const char *key);
 
-
+/**
+ * @brief  Delete the first node that contains the specified key in data 
+ */
 void deleteNode(_ln *listNode, const char *key);
 
+/**
+ * @brief  save a given node structure to permanent storage
+ */
+void *dumpNode(void);
 
 #endif /* linkedlist.h */

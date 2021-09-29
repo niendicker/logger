@@ -26,6 +26,7 @@
 #include <netdb.h>	    /* hostent */
 #include "errorCtrl.h"
 #include "mbDevice.h"
+#include "postgresql.h"
 
 enum polling{
   min_timeout_ms=100
