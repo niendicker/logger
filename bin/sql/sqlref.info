@@ -1,0 +1,41 @@
+$ psql postgresql://dbmaster:5433/mydb?sslmode=require
+
+When the defaults aren't quite right, you can save yourself some typing by setting the 
+environment variables PGDATABASE, PGHOST, PGPORT and/or PGUSER to appropriate values. 
+(For additional environment variables, see Section 34.15.) It is also convenient to 
+have a ~/.pgpass file to avoid regularly having to type in passwords. 
+See Section 34.16 for more information.
+
+Files named in a COPY command are read or written directly by the server,
+not by the client application. 
+Therefore, they must reside on or be accessible to the database server machine, not the client. 
+
+They must be accessible to and readable or writable by the PostgreSQL user (the user ID the server runs as),
+not the client. COPY naming a file is only allowed to database superusers, since it allows reading or writing 
+any file that the server has privileges to access.
+
+Do not confuse COPY with the psql instruction \copy. \copy invokes COPY FROM STDIN or COPY TO STDOUT, and 
+then fetches/stores the data in a file accessible to the psql client. Thus, file accessibility and access 
+rights depend on the client rather than the server when \copy is used.
+
+It is recommended that the file name used in COPY always be specified as an absolute path. This is enforced 
+by the server in the case of COPY TO, but for COPY FROM you do have the option of reading from a file 
+specified by a relative path. The path will be interpreted relative to the working directory of the server
+process (normally the cluster's data directory), not the client's working directory.
+
+COPY FROM will invoke any triggers and check constraints on the destination table. However, it will not 
+invoke rules.
+COPY input and output is affected by DateStyle. To ensure portability to other PostgreSQL installations that 
+might use non-default DateStyle settings, DateStyle should be set to ISO before using COPY TO. It is also a 
+good idea to avoid dumping data with IntervalStyle set to sql_standard, because negative interval values 
+might be misinterpreted by a server that has a different setting for IntervalStyle.
+
+Input data is interpreted according to ENCODING option or the current client encoding, and output data is 
+encoded in ENCODING or the current client encoding, even if the data does not pass through the client but
+is read from or written to a file directly by the server.
+
+COPY stops operation at the first error. This should not lead to problems in the event of a COPY TO, but
+the target table will already have received earlier rows in a COPY FROM. These rows will not be visible or 
+accessible, but they still occupy disk space. This might amount to a considerable amount of wasted disk 
+space if the failure happened well into a large copy operation. You might wish to invoke VACUUM to recover
+the wasted space.
