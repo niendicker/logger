@@ -1,0 +1,33 @@
+{
+	"folders": [
+		{
+			"name": "🔍Decompiler!",
+			"uri": "decompileFs:/"
+		},
+		{
+			"path": ".."
+		}
+	],
+   "settings": {
+      "editor.tabSize": 2,
+      "editor.accessibilityPageSize": 11,
+      "files.associations": {
+        "modbus.h": "c",
+        "modbus-tcp.h": "c",
+        "errno.h": "c",
+        "modbustcp.h": "c",
+        "device_config_parser.h": "c",
+        "stdint.h": "c",
+        "stdio.h": "c",
+        "stdlib.h": "c",
+        "type_traits": "c",
+        "mbdevice.h": "c",
+        "errorctrl.h": "c",
+        "mbtcp.h": "c",
+        "main.h": "c",
+        "postgresql.h": "c",
+        "stat.h": "c"
+      },
+      "editor.stickyTabStops": true
+   }
+}

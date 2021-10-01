@@ -24,10 +24,10 @@ echo "# CREATE DEFAULT RELATION"
 echo "#----------------------------------------------------------" 
 sudo -u $superuser psql -d $database -c "CREATE TABLE \
 $database.public.$modbusRelation ( \
-deviceid varchar     NOT NULL DEFAULT 'Invalid', \
+deviceid varchar(50) NOT NULL DEFAULT 'Invalid', \
 delay    real        NOT NULL DEFAULT 0.0, \
 time     timestamptz NOT NULL, \
-metrics  varchar     NOT NULL DEFAULT 'ms' ); \
+metrics  varchar(2)  NOT NULL DEFAULT 'ms' ); \
 -- Column comments COMMENT ON COLUMN public.$modbusRelation.deviceid IS \
 'Device ID need to be unique for each device on local network';" && \
 echo "Relation $modbusRelation created "

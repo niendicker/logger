@@ -15,6 +15,10 @@ config_files=()
 
 scripts_home="$files_home/scripts"
 scripts_files=()
+
+sql_home="$files_home/sql"
+sql_files=()
+
 # Bin Folder
 for file in "$files_home"/*.arm
 do
@@ -34,6 +38,13 @@ do
   scripts_files+=( "$file" )
 done
   scp -P 171 "${scripts_files[@]}" $target_user_name@$target_address:"$target_folder/bin/scripts"
+
+#bin/scripts folder
+for file in "$sql_home"/*
+do
+  sql_files+=( "$file" )
+done
+  scp -P 171 "${sql_files[@]}" $target_user_name@$target_address:"$target_folder/bin/sql"
 
 
 #scp -P 171 "${source_files[@]}" $target_user_name@$target_address:"$target_folder/bin" \
