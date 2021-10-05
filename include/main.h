@@ -35,8 +35,6 @@ enum argConstraints{
   argMax=( _argv_sz_ )
 };
 
-void clearScreen();
-
-
+int help();
 #endif/* main */
 

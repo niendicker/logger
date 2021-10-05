@@ -51,6 +51,7 @@ enum{
             DATA_KEY( scale        ) \
             DATA_KEY( unit         ) \
             DATA_KEY( meaning      ) \
+            DATA_KEY( lastValid    ) \
             DATA_KEY( _lastTuple_  ) //Include New tuples above ^^^
 
 #define ENUM_MBR_DATA_KEY(ENUM) ENUM,

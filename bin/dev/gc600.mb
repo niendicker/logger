@@ -12,4 +12,4 @@ signal   = 0
 scale    = 256
 unit     = V
 meaning  = Generator_Volts
-
+lastValid = 00000000000000

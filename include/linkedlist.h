@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
-
+#include "resources.h"
 /*
   Linked List Map Data structure 
   listNode->next --------> listNode->next ------> listNode->next = NULL 
@@ -21,6 +21,7 @@
 */
 
 typedef struct __dn{  /* Generic data node for single linked list */
+  uint64_t keyHash;
   char *key;   /* Used to update and retrieve data */
   char *value; /* Data value */
   struct __dn  *next;
@@ -35,13 +36,13 @@ typedef struct __ln { /* Generic list node for single linked list */
  * @brief  Insert a new node into head of list nodes 
  * @return done|NULL
  */
-int pushNode(_ln *listNode);
+_ln *pushNode(_ln *listNode);
 
 /**
  * @brief  Insert data into head of current mb register 
  * @return done|NULL
  */
-int pushData(_ln *listNode, char *key, char *value);
+_ln *pushData(_ln *listNode, char *key, char *value);
 
 /**
  * @brief  Find and return some modbus register key and value tuple
@@ -65,10 +66,5 @@ void deleteData(_ln *listNode, const char *key);
  * @brief  Delete the first node that contains the specified key in data 
  */
 void deleteNode(_ln *listNode, const char *key);
-
-/**
- * @brief  save a given node structure to permanent storage
- */
-void *dumpNode(void);
 
 #endif /* linkedlist.h */

@@ -27,6 +27,9 @@
 #include "errorCtrl.h"
 #include "mbDevice.h"
 #include "postgresql.h"
+#include "resources.h"
+
+#define _mbpoll_std_ip_ ((char*)"MOD.BUS.POL.L:)")
 
 enum polling{
   min_timeout_ms=100
@@ -231,7 +234,7 @@ int _mbRequestRaw(const mbCtx *ctx);
 /**
  * @brief Wait for reply from a modbus device for a maximum specified delta time 
  * @param ctx Modbus device Context with socket and timeout 
- * @return delta time in uS|failure
+ * @return actual delta time in uS|failure
  */
 uint32_t waitReply(mbCtx *ctx);
 
@@ -259,5 +262,20 @@ int _mbReplyRaw(const mbCtx *ctx);
  * @return done|failure
  */
 int mbParseReply(mbCtx *ctx);
+
+/**
+ * @brief Save all modbus registers value 
+**/
+_ln* pushDeviceData(char *deviceID, _ln *deviceMbr);
+
+/**
+ * @brief Free device data/type list
+**/
+int dropDeviceData(_ln *deviceRow);
+
+/**
+ * @brief  Store the data on postgresql
+**/
+int saveData(mbCtx *dev);
 
 #endif /* ./include/modbusTcp.h */

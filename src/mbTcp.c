@@ -18,36 +18,8 @@
 #define STOL(S_MSB, S_LSB) (((S_MSB << 8) & 0xFF) || (S_LSB & 0xFF))
 
 /**
- * @brief  Print device configuration
-**/
-int mbShowConf(mbCtx *ctx) {
-   showDeviceConf(&ctx->dev);
-   return done;
-};
-
-/**
- * @brief  Print device registers map information
-**/
-int mbShowRegistersMap(mbCtx *ctx) {
-  showDeviceMap(&ctx->dev);
-  return done;
-};
-
-/**
- * @brief Create a new context.
- *        Load all device parameters from filePath file
-**/
-mbCtx * mbConfigure(const char * filePath) {
-  assert(filePath);
-  mbCtx * ctx = (mbCtx * ) malloc(sizeof(mbCtx));
-  assert(ctx);
-  if ( !deviceConfigure( &ctx->dev, filePath) ) { return NULL; }
-  return ctx;
-};
-
-/**
- * @brief Load context device parameters from filePath file
- *        Load context device registers map (MBR) metadata
+ * @brief Load context config parameters from filePath file
+ *        Load context config registers map (MBR) metadata
  *        Initialize context
 **/
 mbCtx *mbInit(const char *mbDevConfigFile) {
@@ -59,10 +31,8 @@ mbCtx *mbInit(const char *mbDevConfigFile) {
   newDev->adu.mbap._uID = newDev->dev.link.modbusRtu.unitAddress; /* Serial line address */
   newDev->adu.mbap._fBytes = 0;
   newDev->dev.link.modbusTcp.socket = failure;
-  newDev->dev.txADU = (char*)malloc(_adu_size_);
-  assert(newDev->dev.txADU);
-  newDev->dev.rxADU = (char*)malloc(_adu_size_);
-  assert(newDev->dev.rxADU);
+  newDev->dev.txADU = salloc(_adu_size_);
+  newDev->dev.rxADU = salloc(_adu_size_);
 #ifndef NDEBUG
   mbShowConf(newDev);    
   mbShowRegistersMap(newDev);
@@ -71,7 +41,7 @@ mbCtx *mbInit(const char *mbDevConfigFile) {
 };
 
 /**
- * @brief Open a socket, Resolve device Hostname and Connect to IP address
+ * @brief Open a socket, Resolve config Hostname and Connect to IP address
  * @param ctx Context with meta data to stablish a connection
  * @return done|failure
  */
@@ -80,13 +50,11 @@ int mbTcpConnect(mbCtx *ctx) {
   ctx->dev.link.modbusTcp.socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
   assert(ctx->dev.link.modbusTcp.socket);
   char *ipAddress = ctx->dev.link.modbusTcp.ipAddress;
-  if(strlen(ipAddress) != (sizeof("MOD.BUS._PO.LL_")-1)){ /* Invalid IP. Trying DNS translation from hostname */
+  char *defaultIP = (char*)"000.000.000.000";
+  if(strcmp(ipAddress, defaultIP) == 0){ /* Invalid IP. Trying DNS translation from hostname */
     char *hostname = confValue(ctx->dev.config, hostname);
     assert(hostname);
-    ipAddress = (char*)realloc(ipAddress, sizeof("MOD.BUS._PO.LL_"));
-    assert(ipAddress);
-    strcpy(ipAddress, htoip(hostname)); /* DNS translation. Resolve hostname => IP address */
-    assert(ipAddress);
+    ipAddress = srealloc_copy(ipAddress, htoip(hostname));
   }
   struct sockaddr_in mbServer; /* Set connection parameters */
   mbServer.sin_addr.s_addr = inet_addr(ipAddress);
@@ -107,6 +75,23 @@ int mbTcpConnect(mbCtx *ctx) {
 #endif
   return done;
 };
+
+/**
+ * @brief  Update context config modbus registers (MBR)
+**/
+int mbUpdate(mbCtx *ctx) {
+  assert(ctx && ctx->dev.mbr);
+  uint8_t commFailure = 0;
+  _ln *mbr = ctx->dev.mbr;
+  while(mbr){ 
+    if ( mbSendRequest(ctx) == failure || mbGetReply(ctx) == failure ) { /* Dont call mbGetReply if mbSendRequest fails */
+      mbTcpReconnect(ctx);
+      commFailure++;
+    }
+    mbr = mbr->next;
+  }
+  return( commFailure?( failure ):( done ) );
+}; /* mbUpdate */
 
 /**
  * @brief Close socket connection
@@ -150,114 +135,48 @@ int mbTcpReconnect(mbCtx *ctx){
 };
 
 /**
+ * @brief Create a new context.
+ *        Load all config parameters from filePath file
+**/
+mbCtx * mbConfigure(const char * filePath) {
+  assert(filePath);
+  mbCtx * ctx = (mbCtx * ) malloc(sizeof(mbCtx));
+  assert(ctx);
+  if ( !deviceConfigure( &ctx->dev, filePath) ) { return NULL; }
+  return ctx;
+};
+
+/**
+ * @brief  Print config configuration
+**/
+int mbShowConf(mbCtx *ctx) {
+   showDeviceConf(&ctx->dev);
+   return done;
+};
+
+/**
+ * @brief  Print config registers map information
+**/
+int mbShowRegistersMap(mbCtx *ctx) {
+  showDeviceMap(&ctx->dev);
+  return done;
+};
+
+/**
  * @brief Receive a hostname and try to get and return the IP address
- * @param hostname Network name of the slave device
+ * @param hostname Network name of the slave config
  * @return ipAddress|NULL.
  */
 char *htoip(char *hostname) {
   struct hostent *he = gethostbyname(hostname);
   assert(he);
   struct in_addr **addr_list = (struct in_addr**)he->h_addr_list; /* Cast since h_addr_list also has the ip address in long format only */
-  char *ip = (char*)malloc( sizeof(char) * 100 );
-  assert(ip);
-  for (int i = 0; addr_list[i] != NULL; i++) {
-    strcpy(ip, inet_ntoa(*addr_list[i])); /* Return the first one; */
-  }
+  assert(*addr_list);
+  char *ip = salloc_init(inet_ntoa(*addr_list[0]));
 #ifndef NDEBUG
   printf("Info: DNS translation finished for %s to IP %s \n", hostname, ip);
 #endif
-  return ip;
-};
-
-/**
- * @brief Print to stdout sendded ADU raw data
-**/
-int _mbRequestRaw(const mbCtx *ctx){
-  assert(ctx);
-  printf("Info: Modbus Query: ");
-  for (int i = 0; i < _adu_size_; i++){
-    uint8_t data = (uint8_t)ctx->dev.txADU[i];
-    printf("%02X", data); /* Hex value */
-  }
-  printf("\n");
-  return done;
-};
-
-/**
- * @brief Print to stdout received ADU raw data
-**/
-int _mbReplyRaw(const mbCtx *ctx){
-  assert(ctx);
-  printf("Info: Modbus Reply: ");
-  for (size_t i = 0; i < _adu_size_; i++){
-    uint8_t data = (uint8_t)ctx->dev.rxADU[i];
-    printf("%02X", data); /* Hex value */
-  }
-  printf("\n");
-  return done;
-};
-
-/**
- * @brief When a correct modbus reply data size is received
- *        this function parse and save received data to ctx  
-**/
-int mbParseReply(mbCtx *ctx){
-  assert(ctx);
-  uint16_t tID, pID, fBytes;
-  uint8_t uID, fCD, plSz;
-  tID  = (uint16_t)STOL(ctx->dev.rxADU[ _tIDMsb ], ctx->dev.rxADU[ _tIDLsb ]); /* MBAP */
-  pID  = (uint16_t)STOL(ctx->dev.rxADU[ _pIDMsb ], ctx->dev.rxADU[ _pIDLsb ]); 
-  fBytes = (uint16_t)STOL(ctx->dev.rxADU[ _dSZMsb ], ctx->dev.rxADU[ _dSZMsb ]);
-  uID  = (uint8_t)ctx->dev.rxADU[_uID]; 
-  fCD  = (uint8_t)ctx->dev.rxADU[_replyFC]; /* PDU */ 
-  plSz = (uint8_t)ctx->dev.rxADU[_replySZ]; /* Reply payload size */ 
-  if(tID != ctx->adu.mbap._tID){  /* Transaction ID need to be the same for query/reply */
-#ifndef NDEBUG
-    printf("Error: Transaction ID \n\n");
-#endif    
-    return failure;
-  }
-  if(pID != ctx->adu.mbap._pID){     /* Standard 0 = modbus tcp  */
-#ifndef NDEBUG
-    printf("Error: pID \n\n");
-#endif    
-    return failure;
-  }
-  if(uID != ctx->dev.link.modbusRtu.unitAddress){ /* Unit ID is the modbus RTU (Serial comm.) address */
-#ifndef NDEBUG
-    printf("Error: Unit ID \n\n");
-#endif    
-    return failure;
-  }
-  if(fBytes < 4 ){ /* At least 1B(uID) + 1B(fCode) + 1B(payload size) + 1B of payload */
-#ifndef NDEBUG
-    printf("Error: Data size to short \n\n");
-#endif    
-    return failure;
-  }
-  uint8_t fcdRequest = ctx->adu.pdu.functionCode; 
-  if(fCD != fcdRequest){
-#ifndef NDEBUG
-    printf("Error: Function code \n\n");
-#endif   
-    return failure;
-  }
-  if(plSz != 2){
-#ifndef NDEBUG
-    printf("Error: Payload size \n\n");
-#endif   
-    return failure;
-  }
-  char *data = (char*)malloc(plSz);
-  assert(data);
-  for (uint8_t i = 0; i < plSz; i++) {
-    data[i] = ctx->dev.rxADU[ _replyData + i ];
-  }
-  //ctx->dev.mbr->lastValid = (uint16_t)strtol(data, NULL, 10);
-#ifndef NDEBUG
-  printf("Info: New value %d \n", 0);
-#endif  
-  return done;
+  return (ip != NULL ? ip : NULL);
 };
 
 /**
@@ -306,7 +225,7 @@ int mbInitPDU(mbCtx *ctx) {
 }; 
 
 /**
- * @brief  Send request to a modbus device
+ * @brief  Send modbus query to device
 **/
 int mbSendRequest(mbCtx *ctx){
   assert(ctx && ctx->dev.link.modbusTcp.socket && ctx->dev.mbr);
@@ -314,10 +233,10 @@ int mbSendRequest(mbCtx *ctx){
   mbInitPDU(ctx);
 #ifndef NDEBUG
   _mbRequestRaw(ctx);
-#endif  
+#endif 
   if (send(ctx->dev.link.modbusTcp.socket, ctx->dev.txADU, _adu_size_, MSG_DONTWAIT) != _adu_size_) {
 #ifndef NDEBUG
-    puts("Error: Can't send data to device.");
+    puts("Error: Can't send data to config.");
 #endif
     return failure;
   }
@@ -325,7 +244,21 @@ int mbSendRequest(mbCtx *ctx){
 };
 
 /**
- * @brief Wait for reply from a modbus device for a maximum specified delta time 
+ * @brief Print to stdout sendded ADU raw data
+**/
+int _mbRequestRaw(const mbCtx *ctx){
+  assert(ctx);
+  printf("Info: Modbus Query: ");
+  for (int i = 0; i < _adu_size_; i++){
+    uint8_t data = (uint8_t)ctx->dev.txADU[i];
+    printf("%02X", data); /* Hex value */
+  }
+  printf("\n");
+  return done;
+};
+
+/**
+ * @brief Wait for reply from a modbus config for a maximum specified delta time 
 **/
 uint32_t waitReply(mbCtx *ctx){ /*//TODO Implement some tunning for wait */
   uint32_t receiveTimeout = (uint32_t)( ctx->dev.link.modbusTcp.msTimeout * 10E2 );
@@ -353,7 +286,6 @@ int mbGetReply(mbCtx *ctx) {
 #endif
     return failure;    
   }
-  storePing(confValue(ctx->dev.config, tag), replyDelay);
   uint8_t replySize = recv(ctx->dev.link.modbusTcp.socket, ctx->dev.rxADU, _adu_size_, MSG_DONTWAIT);
 #ifndef NDEBUG
   _mbReplyRaw(ctx);
@@ -377,24 +309,143 @@ int mbGetReply(mbCtx *ctx) {
   }
 #ifndef NDEBUG
   puts("Error: Unknown modbus reply");
-  puts("Error: Are you connected to a modbus device?\n");
+  puts("Error: Are you connected to a modbus config?\n");
 #endif 
   return failure;
 };
 
 /**
- * @brief  Update context device modbus registers (MBR)
+ * @brief Print to stdout received ADU raw data
 **/
-int mbUpdate(mbCtx *ctx) {
-  assert(ctx && ctx->dev.mbr);
-  uint8_t commFailure = 0;
-  _ln *mbr = ctx->dev.mbr;
-  while(mbr){ 
-    if ( mbSendRequest(ctx) == failure || mbGetReply(ctx) == failure ) { /* Dont call mbGetReply if mbSendRequest fails */
-      mbTcpReconnect(ctx);
-      commFailure++;
-    }
-    mbr = mbr->next;
+int _mbReplyRaw(const mbCtx *ctx){
+  assert(ctx);
+  printf("Info: Modbus Reply: ");
+  for (size_t i = 0; i < _adu_size_; i++){
+    uint8_t data = (uint8_t)ctx->dev.rxADU[i];
+    printf("%02X", data); /* Hex value */
   }
-  return( commFailure?( failure ):( done ) );
+  printf("\n");
+  return done;
 };
+
+/**
+ * @brief When a correct modbus reply data size is received
+ *        this function parse and save received data to ctx  
+**/
+int mbParseReply(mbCtx *ctx){
+  assert(ctx);
+  uint16_t tID, pID, fBytes;
+  uint8_t uID, fCD, plSz;
+  tID  = (uint16_t)STOL(ctx->dev.rxADU[ _tIDMsb ], ctx->dev.rxADU[ _tIDLsb ]); /* MBAP */
+  pID  = (uint16_t)STOL(ctx->dev.rxADU[ _pIDMsb ], ctx->dev.rxADU[ _pIDLsb ]); 
+  fBytes = (uint16_t)STOL(ctx->dev.rxADU[ _dSZMsb ], ctx->dev.rxADU[ _dSZMsb ]);
+  uID  = (uint8_t)ctx->dev.rxADU[_uID]; 
+  fCD  = (uint8_t)ctx->dev.rxADU[_replyFC]; /* PDU */ 
+  plSz = (uint8_t)ctx->dev.rxADU[_replySZ]; /* Reply payload size */ 
+  
+  if(tID != ctx->adu.mbap._tID){  /* Transaction ID need to be the same for query/reply */
+#ifndef NDEBUG
+    printf("Error: Transaction ID \n\n");
+#endif    
+    return failure;
+  }
+  if(pID != ctx->adu.mbap._pID){     /* Standard 0 = modbus tcp  */
+#ifndef NDEBUG
+    printf("Error: pID \n\n");
+#endif    
+    return failure;
+  }
+  if(uID != ctx->dev.link.modbusRtu.unitAddress){ /* Unit ID is the modbus RTU (Serial comm.) address */
+#ifndef NDEBUG
+    printf("Error: Unit ID \n\n");
+#endif    
+    return failure;
+  }
+  if(fBytes < 4 ){ /* At least 1B(uID) + 1B(fCode) + 1B(payload size) + 1B of payload */
+#ifndef NDEBUG
+    printf("Error: Data size to short \n\n");
+#endif    
+    return failure;
+  }
+  uint8_t fcdRequest = ctx->adu.pdu.functionCode; 
+  if(fCD != fcdRequest){
+#ifndef NDEBUG
+    printf("Error: Function code \n\n");
+#endif   
+    return failure;
+  }
+  if(plSz != 2){
+#ifndef NDEBUG
+    printf("Error: Payload size \n\n");
+#endif   
+    return failure;
+  }
+  char *data = salloc(plSz);
+  for (uint8_t i = 0; i < plSz; i++) {
+    data[i] = ctx->dev.rxADU[ _replyData + i ];
+  }
+#ifndef NDEBUG
+  printf("Info: New value %d \n", 0);
+#endif  
+  return done;
+};
+
+/**
+ * @brief Save all modbus registers value 
+**/
+_ln* pushDeviceData(char *deviceID, _ln *deviceMbr){
+  assert(deviceID && deviceMbr);
+  _ln *deviceData = deviceMbr;
+  _ln *newRow = NULL;
+  char *colID = salloc(_byte_size_); 
+  char *lastValidData = salloc(_byte_size_);
+  while(deviceData){ 
+    newRow = pushNode(newRow);
+    /* FILO list */
+    colID = srealloc_copy(colID, mbrValue(deviceData, meaning));
+    char *dataType = (char*)"float4"; 
+    newRow = pushData(newRow, colID, dataType);
+    /* Insert data at head of list */
+    lastValidData =  srealloc_copy(lastValidData, mbrValue(deviceData, lastValid)); /* last successfully readded data */
+    newRow = pushData(newRow, colID, lastValidData);
+    deviceData = deviceData->next;
+  }
+  free(colID);
+  free(lastValidData);
+  assert(newRow);
+  return newRow;
+}; /* pushDeviceData */
+
+/**
+ * @brief Free device data/type list
+**/
+int dropDeviceData(_ln *deviceRow){
+  assert(deviceRow);
+  char *columnID = salloc(_str_null_);
+  while(deviceRow){ 
+    columnID = srealloc_copy(columnID, deviceRow->data->key);
+    _dn *data = deviceRow->data;
+    while(data){
+      deleteData(deviceRow, columnID);
+      data = data->next;
+    }
+    deviceRow = deviceRow->next;
+  }
+  free(columnID);
+  return 0;
+}; /* dropDeviceData */
+
+/**
+ * @brief  Store the data on postgresql
+**/
+int saveData(mbCtx *_mbCtx){
+  assert(_mbCtx);
+  char *deviceID = confValue(_mbCtx->dev.config, tag);
+  assert(deviceID);
+  _ln *mbr = _mbCtx->dev.mbr;
+  assert(mbr);
+  _ln *deviceData = pushDeviceData(deviceID, mbr);
+  persistData(deviceID, deviceData);
+  dropDeviceData(deviceData);
+  return 0;
+}; /* save data */
