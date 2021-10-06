@@ -26,7 +26,8 @@
         "mbtcp.h": "c",
         "main.h": "c",
         "postgresql.h": "c",
-        "stat.h": "c"
+        "stat.h": "c",
+        "resources.h": "c"
       },
       "editor.stickyTabStops": true
    }

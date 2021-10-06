@@ -21,44 +21,47 @@
 #include "linkedlist.h"
 // /#include "mbTcp.h"
 
-#define   FOREACH_CONFIG_DATA_KEY( CONFIG_DATA_KEY )  \
-            CONFIG_DATA_KEY( tag              )  \
-            CONFIG_DATA_KEY( protocol         )  \
-            CONFIG_DATA_KEY( hostname         )  \
-            CONFIG_DATA_KEY( ipAddress        )  \
-            CONFIG_DATA_KEY( port             )  \
-            CONFIG_DATA_KEY( msTimeout        )  \
-            CONFIG_DATA_KEY( unitAddress      )  \
-            CONFIG_DATA_KEY( baudRate         )  \
-            CONFIG_DATA_KEY( dataBits         )  \
-            CONFIG_DATA_KEY( stopBits         )  \
-            CONFIG_DATA_KEY( parity           )  \
-            CONFIG_DATA_KEY( handshake        )  \
-            CONFIG_DATA_KEY( mapFile          )  \
-            CONFIG_DATA_KEY( _lastConfOption_ )  //Include New params above ^^^
+#define \
+FOREACH_CONFIG_DATA_KEY( CONFIG_DATA_KEY )  \
+        CONFIG_DATA_KEY( tag              )  \
+        CONFIG_DATA_KEY( protocol         )  \
+        CONFIG_DATA_KEY( hostname         )  \
+        CONFIG_DATA_KEY( ipAddress        )  \
+        CONFIG_DATA_KEY( port             )  \
+        CONFIG_DATA_KEY( msTimeout        )  \
+        CONFIG_DATA_KEY( unitAddress      )  \
+        CONFIG_DATA_KEY( baudRate         )  \
+        CONFIG_DATA_KEY( dataBits         )  \
+        CONFIG_DATA_KEY( stopBits         )  \
+        CONFIG_DATA_KEY( parity           )  \
+        CONFIG_DATA_KEY( handshake        )  \
+        CONFIG_DATA_KEY( mapFile          )  \
+        CONFIG_DATA_KEY( _lastConfOption_ )  //Include New params above ^^^
 
 #define ENUM_CONFIG_DATA_KEY(ENUM) ENUM,
 enum{
    FOREACH_CONFIG_DATA_KEY(ENUM_CONFIG_DATA_KEY)
 };
 
-#define   FOREACH_MBR_DATA_KEY( DATA_KEY ) \
-            DATA_KEY( function     ) \
-            DATA_KEY( address      ) \
-            DATA_KEY( size         ) \
-            DATA_KEY( format       ) \
-            DATA_KEY( signal       ) \
-            DATA_KEY( scale        ) \
-            DATA_KEY( unit         ) \
-            DATA_KEY( meaning      ) \
-            DATA_KEY( _lastTuple_  ) //Include New tuples above ^^^
+#define \
+FOREACH_MBR_DATA_KEY( MBR_DATA_KEY ) \
+        MBR_DATA_KEY( function     ) \
+        MBR_DATA_KEY( address      ) \
+        MBR_DATA_KEY( size         ) \
+        MBR_DATA_KEY( format       ) \
+        MBR_DATA_KEY( signal       ) \
+        MBR_DATA_KEY( scale        ) \
+        MBR_DATA_KEY( unit         ) \
+        MBR_DATA_KEY( meaning      ) \
+        MBR_DATA_KEY( lastValid    ) \
+        MBR_DATA_KEY( _lastTuple_  ) //Include New tuples above ^^^
 
 #define ENUM_MBR_DATA_KEY(ENUM) ENUM,
 enum mbrDataKeys{
     FOREACH_MBR_DATA_KEY(ENUM_MBR_DATA_KEY)
 };
 
-#define IGNORE(C) ( ((C<'A'||C>'Z') && (C<'a'||C>'z')) || (C == '\n')  )
+#define IGNORE(C) ( (C<'A'||C>'Z')&&(C<'a'||C>'z') )
 #define TOKEN_KEY_MATCH(str1,str2) ( strcmp( str1, str2 ) == 0 )
 
 #define confValue(config,key)  ( peekValue( config, (char*)#key ) )
@@ -67,7 +70,7 @@ enum mbrDataKeys{
 #define startTag ("MB_REGISTER_START\n")
 
 typedef struct __tcp{
-  uint32_t socket;
+  int32_t socket;
   uint16_t port;
   uint8_t msTimeout; /* Maximum waiting time for any communication reply in ms */
   char *hostname;
@@ -108,7 +111,7 @@ typedef struct __dev{
  *                  registers from remote server/slave modbus device 
  * @return device|NULL
  */
-int deviceSetCtx(device *mbDevice);
+void deviceSetCtx(device *mbDevice);
 
 /**
  * @brief Load all device parameters
@@ -139,7 +142,7 @@ int freeDeviceConf(device *dev);
  * @param dev Device with registers map file path loaded on loadDeviceConf()
  * @return device|failure
  */
-device *deviceMap(device *dev);
+void deviceMap(device *dev);
 
 /**
  * @brief  Print device registers map information

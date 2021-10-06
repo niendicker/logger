@@ -11,16 +11,6 @@
  */ 
 #include "main.h"
 
-int help(){
-  printf("\t\tmodbusPoll v%s.%s\n", VERSION_MAJOR, VERSION_MINOR);
-  FILE *helpDoc = fopen("../README", "r");
-  assert(helpDoc);
-  puts("");
-  for( int c; (c=fgetc(helpDoc)) != EOF; printf("%c", c) );
-  puts("");
-  return done;
-};
-
 int main(int argc , char *argv[]) {
   if( argc != _argv_sz_ ) {
     help();
@@ -38,9 +28,11 @@ int main(int argc , char *argv[]) {
   const uint8_t eThreshold = (uint8_t)strtol( argv[errorMax], NULL, 10);
 
   for (int poll = -1, eCount = 0; true ; ) { /* until communication error is below the threshold received from argv[3] */
-    poll = (pollCount > 0) ? poll+1 : -1; /* 0 means polling forever */
+    poll += (pollCount > 0) ? 1 : 0; /* 0 means polling forever */
     if(poll < pollCount){
-      eCount = ((mbUpdate(mbDevice) == failure) && eThreshold > 0) ? eCount+1 : 0; 
+      if (mbUpdate(mbDevice) == failure)
+        eCount += eThreshold > 0 ? 1 : 0;
+      saveData(mbDevice);
     }
     else {
 #ifndef NDEBUG
@@ -60,5 +52,17 @@ int main(int argc , char *argv[]) {
   } /* polling */
   mbClose(mbDevice);
   exit(EXIT_SUCCESS);
-} /* main */
+}; /* main */
+
+
+
+int help(){
+  printf("\t\tmodbusPoll v%s.%s\n", VERSION_MAJOR, VERSION_MINOR);
+  FILE *helpDoc = fopen("../README", "r");
+  assert(helpDoc);
+  puts("");
+  for( int c; (c=fgetc(helpDoc)) != EOF; printf("%c", c) );
+  puts("");
+  return done;
+}; /* help */
 

@@ -1,0 +1,1 @@
+"COPY %s FROM '%s' DELIMITER ',' CSV HEADER ;"

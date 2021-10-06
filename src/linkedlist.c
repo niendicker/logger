@@ -6,34 +6,30 @@
  * @brief  Insert data into head of current mb register 
  * @return done|NULL
  */
-int pushData(_ln *listNode, char *key, char *value){
-  assert(listNode && key && value);
-  _dn *newData = (_dn*)malloc(sizeof(_dn));
+_ln *pushData(_ln *listNode, char *key, char *value){
+  assert(key && value);
+  _dn *newData = (_dn*)calloc(sizeof(_dn), _byte_size_);
   assert(newData);
-  newData->key = (char*)malloc(strlen(key));
-  assert(newData->key);
-  newData->value = (char*)malloc(strlen(value));
-  assert(newData->value);
-  strcpy(newData->key, key);
-  strcpy(newData->value, value);
+  newData->keyHash = djb2_hash(key);
+  newData->key = salloc_init(key);
+  newData->value = salloc_init(value);
   newData->next = listNode->data;
   listNode->data = newData;
-  return 0;
+  assert(newData);
+  return listNode;
 };
 
 /**
  * @brief  Insert a new node into head of list nodes 
  * @return done|NULL
  */
-int pushNode(_ln *listNode){
-  assert(listNode);
-  _ln *newNode = (_ln*)malloc(sizeof(_ln));
+_ln *pushNode(_ln *listNode){
+  _ln *newNode = (_ln*)calloc(sizeof(_ln), _byte_size_);
   assert(newNode);
-  newNode->data = (_dn*)malloc(sizeof(_dn));
-  assert(newNode->data);
   newNode->next = listNode;
   listNode = newNode;
-  return 0;
+  assert(listNode);
+  return listNode;
 };
 
 /**
@@ -42,14 +38,15 @@ int pushNode(_ln *listNode){
  */
 char *peekValue(_ln *listNode, char *key){
   assert(listNode->data && key);
+  uint64_t hash = djb2_hash(key);
   _dn *data = listNode->data;
   while( data ){
-    if( strcmp(data->key, key) == 0 ) {       
+    if( hash == data->keyHash ) {       
       return data->value; 
     }
     data = data->next;
   }
-  return ((char*)"0");
+  return NULL;
 };
 
 /**
@@ -72,40 +69,39 @@ void listNode(_ln *listNode){
  * @brief  Delete the data specified by key on any list node
  */
 void deleteData(_ln *listNode, const char *key){
-  _dn *dn = listNode->data;
-  _dn *prev = dn;
-  assert(dn->key && dn->value);
-  while( dn ) { 
-    if( strcmp( dn->key, key ) == 0 ){
-      prev->next = dn->next;
-      free(dn->key);
-      free(dn->value);
-      free(dn);
-      return; /* Comment to remove also duplicated data nodes */
-    }
+  _dn *dn = listNode->data, *prev;
+  uint64_t hash = djb2_hash(key);
+  if(dn != NULL && ( hash == dn->keyHash )){
+    listNode->data = dn->next; 
+    free(dn);
+    return;
+  }
+  while( dn != NULL &&  hash != dn->keyHash) { 
     prev = dn;
     dn = dn->next;
   }
+  if(dn == NULL) return;
+  prev->next = dn->next;
+  free(dn->key);
+  free(dn->value);
+  free(dn);
 };
 
 /**
  * @brief  Delete the first node that contains the specified key in data 
  */
 void deleteNode(_ln *listNode, const char *key){
-  _ln *ln = listNode;
-  assert(ln && key);
-  _ln *prev = ln;
+  assert(listNode && key);
+  uint64_t hash = djb2_hash(key);
+  _ln *ln = listNode, *prev;
   while( ln ){
     prev = ln;
     _dn *dn = ln->data;
     while(dn){
-      if( strcmp(dn->key, key) == 0 ){
+      if( dn->keyHash == hash ){
+        deleteData(ln, dn->key);
+        dn = dn->next;
         prev->next = ln->next;
-        while( ln->data ){
-          deleteData(ln, ln->data->key);
-          ln->data = ln->data->next;
-        }
-        free(ln->data);
         free(ln);
         return;
       }
