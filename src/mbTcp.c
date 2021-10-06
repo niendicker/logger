@@ -263,17 +263,18 @@ int _mbRequestRaw(const mbCtx *ctx){
 };
 
 /**
- * @brief Wait for reply from a modbus config for a maximum specified delta time 
+ * @brief Wait for a reply from modbus device, until a maximum elapsed time (receiveTimeout[ms]) 
 **/
 uint32_t waitReply(mbCtx *ctx){ /*//TODO Implement some tunning for wait */
   uint32_t receiveTimeout = (uint32_t)( ctx->dev.link.modbusTcp.msTimeout * 10E2 );
   struct timeval wait;
   wait.tv_sec = 0; 
-  wait.tv_usec = receiveTimeout;
+  wait.tv_usec = receiveTimeout; /* timeout for select(...) */
   fd_set fd;
-  FD_ZERO(&fd);
+  FD_ZERO(&fd); /* Reset file descriptor */
   FD_SET(ctx->dev.link.modbusTcp.socket, &fd);
-  if( select(FD_SETSIZE, &fd, NULL, NULL, &wait) == failure){ /* wait for data wait.tv_usec */
+  /* wait for data ready on file descriptor */
+  if( select(FD_SETSIZE, &fd, NULL, NULL, &wait) == failure){ 
     return failure;
   }
   return(receiveTimeout - wait.tv_usec);

@@ -17,9 +17,15 @@
 #include <assert.h>
 #include <stdint.h>
 #include <string.h>
+#include <time.h>  /* clock() */
 
 #define _str_null_  ((uint8_t)1)
 #define _byte_size_ ((uint8_t)1)
+
+typedef enum __timer{ /* cpu_time() options */
+  _start_,
+  _check_
+} _timer;
 
 /**
  * @brief  djb2 hash function by Dan Bernstein 
@@ -58,6 +64,20 @@ char *salloc_init(char *strInit);
 **/
 char *srealloc(char* pstr, int newSize);
 
-
+/**
+ * @brief  Reallocate pstr with str size and copy it
+ * 
+ * @param pstr String to reallocate
+ * @param str string to "fit" in pstr
+**/
 char *srealloc_copy(char* pstr, char* str);
+
+/**
+ * @brief  Return elapsed cpu time between two calls
+ * 
+ * @param command _start_ | _check_ 
+ * @return elapsed cpu time 
+**/
+double cpu_time(_timer command);
+
 #endif /* resources.h */

@@ -1,7 +1,7 @@
 
 #include "postgresql.h"
 
-#define _cache_size ((uint)10) /* Rows to be stored in memory before persist */
+#define _cache_time ((double)10/10E2) /* Elapsed time(s) between export data do postgres  */
 
 _sqlCtx *sqlCtxInit(_sqlCtx *sqlCtx, char* deviceID){
   assert(deviceID);
@@ -23,7 +23,7 @@ _sqlCtx *sqlCtxInit(_sqlCtx *sqlCtx, char* deviceID){
   sqlCtx->sqlTemplate = (char*)salloc(strlen(_sql_template_copy_) + strlen(_mbpoll_sqlDir_));
   sprintf(sqlCtx->sqlTemplate, "%s%s", _mbpoll_sqlDir_, _sql_template_copy_);
   /* File used to export data */
-  sqlCtx->inoutFile.cacheSize = _cache_size;
+  sqlCtx->inoutFile.persist_dt = _cache_time;
   sqlCtx->inoutFile.fileName = salloc(strlen(sqlCtx->pid) + _byte_size_ + strlen(_csv_file_));
   sprintf(sqlCtx->inoutFile.fileName, "%s_%s", sqlCtx->pid, _csv_file_); /* 12345678_mbpoll.csv */
   sqlCtx->inoutFile.filePath = salloc(strlen(_mbpoll_dataDir_) + strlen(sqlCtx->inoutFile.fileName));
@@ -180,19 +180,19 @@ char *appendCsvData(_ln *deviceData, char *row){
 
 int persistData(char *deviceID, _ln *deviceData){
   assert(deviceID && deviceData);
-  static u_int32_t cache = 0;
+  static double dTime = 0;
   static char *dataBuffer;
   static _sqlCtx *sqlCtx;
-  if(cache == 0){ /* Start bufferring device data */
+  if(dTime == 0){ /* Start bufferring device data */
+    dTime = cpu_time(_start_);
     sqlCtx = sqlCtxInit(sqlCtx, deviceID);
     _ln *dataAvaliable = deviceData;
     char *csvHeader = insertCsvHeader(dataAvaliable);
     dataBuffer = salloc_init(csvHeader);
     free(csvHeader);
   } /* Start bufferring device data */
-  cache++;
-  if( cache > sqlCtx->inoutFile.cacheSize ) { /* Dump/Store buffered device data */
-    cache = 0;
+  dTime = cpu_time(_check_);
+  if( dTime > sqlCtx->inoutFile.persist_dt ) { /* Dump/Store buffered device data */
     FILE *outputFile = fopen(sqlCtx->inoutFile.fileName, "w+");
     assert(outputFile);
     int outFileWritten = fprintf(outputFile, "%s", dataBuffer); 
@@ -206,6 +206,7 @@ int persistData(char *deviceID, _ln *deviceData){
     remove(sqlCtx->inoutFile.fileName);
     sqlCtxFree(sqlCtx);
     free(dataBuffer);
+    dTime = cpu_time(_start_);
     return 0;
   }  /* Dump/Store buffered device data */
   dataBuffer = appendCsvData(deviceData, dataBuffer);

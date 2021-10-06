@@ -63,7 +63,7 @@ enum __csv{ /* Comma Separeted File */
 };
 
 typedef struct __csvContext { 
-  uint16_t cacheSize;
+  double persist_dt;
   char *fileName;
   char *filePath; /* Absolute file path 
   Must be accessible (r--) by postgres backend */
