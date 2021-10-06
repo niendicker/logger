@@ -8,7 +8,7 @@
  */
 _ln *pushData(_ln *listNode, char *key, char *value){
   assert(key && value);
-  _dn *newData = (_dn*)malloc(sizeof(_dn));
+  _dn *newData = (_dn*)calloc(sizeof(_dn), _byte_size_);
   assert(newData);
   newData->keyHash = djb2_hash(key);
   newData->key = salloc_init(key);

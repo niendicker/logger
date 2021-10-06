@@ -25,10 +25,9 @@ char *salloc(int size){ /* release version disable all asserts */
 
 char *salloc_init(char *strInit){ /* release version disable all asserts */
   assert(strInit);
-  int stringSize = strlen(strInit) + _str_null_;
-  char *str = (char*)salloc( stringSize );
+  char *str = (char*)salloc( strlen(strInit) );
   assert(str);
-  memcpy(str, strInit, stringSize);
+  memcpy(str, strInit, strlen(strInit) + _str_null_);
   assert(str);
   return str;
 };

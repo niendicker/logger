@@ -13,9 +13,9 @@
 #include "linkedlist.h"
 #include "resources.h"
 
-/* Postgresql types */
-typedef char* varchar_t;    /* not compliant */
-typedef char* timestampz_t; /* not compliant */
+/* Postgresql types */ /* not compliant */
+typedef char* varchar_t;    
+typedef char* timestampz_t;
 typedef float  float4_t;
 typedef double float8_t;
 #define _pgsql_varchar_    ((char*)"varchar"    )
@@ -29,14 +29,15 @@ typedef double float8_t;
 #define _pgsql_host_      ((char*)"localhost")
 #define _pgsql_port_      ((uint) 5432 )
 /* Modbuspoll connection */
-#define _mbpoll_user_     ((char*)"modbuspoll")
-#define _mbpoll_database_ ((char*)"modbuspoll")
-#define _mbpoll_schema_   ((char*)"public"    )
-#define _mbpoll_table_    ((char*)"modbuspoll")
+#define _mbpoll_          ((char*)"modbuspoll")
+#define _mbpoll_user_     ( _mbpoll_ )
+#define _mbpoll_database_ ( _mbpoll_ )
+#define _mbpoll_schema_   ( _mbpoll_ )
+#define _mbpoll_table_    ( _mbpoll_ )
 #ifdef __arm__ /* arm-none-eabi-gcc compiler definition */
   #define _mbpoll_auth_     ((char*)"PGPASSWORD='n13nd1ck3r'" )
-  #define _mbpoll_dataDir_  ((char*)"/home/pi/bin/"           )
-  #define _mbpoll_sqlDir_   ((char*)"/home/pi/bin/sql/"       )
+  #define _mbpoll_dataDir_  ((char*)"/home/pi/run/bin/"           )
+  #define _mbpoll_sqlDir_   ((char*)"/home/pi/run/bin/sql/"       )
 #else /* Using default for modbuspoll project */
   #define _mbpoll_auth_     ((char*)"PGPASSFILE='/home/dev/dbms/00_rpi/bin/.pgpass'" )
   #define _mbpoll_dataDir_  ((char*)"/home/dev/dbms/00_rpi/bin/" )
@@ -65,20 +66,19 @@ typedef struct __csvContext {
   uint16_t cacheSize;
   char *fileName;
   char *filePath; /* Absolute file path 
-  Must be accessible (r--) by postgres backend instance */
-} _csvCtx;
+  Must be accessible (r--) by postgres backend */
+} _csvCtx; /* [pid]_mbpoll.csv */
 
 typedef struct __sqlContext {
   char *pid; /* Is used to generate unique cvs filename*/
   char *hostname;
-  u_int16_t port;
+  int16_t port;
   char *auth; 
   char *user;
   char *database;
   char *schema;
   char *table;
-  char *sqlTemplate; /* Sql script template. Template will be
-                        parsed by sprintf function */
+  char *sqlTemplate; /* Sql script template. tags: %s %d %f... */
   _csvCtx inoutFile;
 } _sqlCtx;
 
@@ -91,13 +91,17 @@ int sqlCtxFree(_sqlCtx *sqlCtx);
 **/
 char *timestampz();
 
+int persistData(char *deviceID, _ln *data);
+
 /**
  * @brief  Execute the sqlFile against postgres using psql interface
 **/
 int runSql(_sqlCtx *sqlCtx);
+
 char *insertCsvHeader(_ln *deviceData);
-int persistData(char *deviceID, _ln *data);
 
 char *appendCsvData(_ln *deviceData, char *row);
+
+
 
 #endif /* postgresql.h */

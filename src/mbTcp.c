@@ -46,13 +46,16 @@ mbCtx *mbInit(const char *mbDevConfigFile) {
  * @return done|failure
  */
 int mbTcpConnect(mbCtx *ctx) {
-  assert(ctx && (ctx->dev.link.modbusTcp.socket == (uint32_t)failure));
-  ctx->dev.link.modbusTcp.socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-  assert(ctx->dev.link.modbusTcp.socket);
+  assert(ctx);
+  int *fdSocket = &ctx->dev.link.modbusTcp.socket; 
+  *fdSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+  assert(fdSocket);
   char *ipAddress = ctx->dev.link.modbusTcp.ipAddress;
+  uint64_t ipHash = djb2_hash(ipAddress);
   char *defaultIP = (char*)"000.000.000.000";
-  if(strcmp(ipAddress, defaultIP) == 0){ /* Invalid IP. Trying DNS translation from hostname */
-    char *hostname = confValue(ctx->dev.config, hostname);
+  uint64_t defaultIpHash = djb2_hash(defaultIP);
+  if(ipHash == defaultIpHash){ /* Invalid IP. Trying DNS translation from hostname */
+    char *hostname = salloc_init(confValue(ctx->dev.config, hostname));
     assert(hostname);
     ipAddress = srealloc_copy(ipAddress, htoip(hostname));
   }
@@ -63,7 +66,7 @@ int mbTcpConnect(mbCtx *ctx) {
 #ifndef NDEBUG
   printf("Info: Connecting to %s @%s:%d \n", confValue(ctx->dev.config, tag), ipAddress, ctx->dev.link.modbusTcp.port);
 #endif
-  if (connect(ctx->dev.link.modbusTcp.socket, (struct sockaddr *)&mbServer, sizeof(mbServer)) == failure) {
+  if (connect(*fdSocket, (struct sockaddr *)&mbServer, sizeof(mbServer)) == failure) {
 #ifndef NDEBUG
     printf("Error: Connection refused from %s \n", confValue(ctx->dev.config, tag));
 #endif
@@ -97,9 +100,11 @@ int mbUpdate(mbCtx *ctx) {
  * @brief Close socket connection
  */
 int mbTcpDisconnect(mbCtx * ctx) {
-  assert(ctx && ctx->dev.link.modbusTcp.socket);
-  close(ctx->dev.link.modbusTcp.socket);
-  ctx->dev.link.modbusTcp.socket = failure;
+  assert(ctx);
+  int32_t *socket = &ctx->dev.link.modbusTcp.socket;
+  if(socket > 0)
+    close(*socket);
+  *socket = 0;
 #ifndef NDEBUG
   printf("Info: Socket closed \n");
 #endif
@@ -128,7 +133,7 @@ int mbClose(mbCtx *ctx){
  * @brief Close and reopen socket connection 
 **/
 int mbTcpReconnect(mbCtx *ctx){
-  assert(ctx && ctx->dev.link.modbusTcp.socket);
+  assert(ctx);
   mbTcpDisconnect(ctx);
   mbTcpConnect(ctx);
   return done;
@@ -140,9 +145,9 @@ int mbTcpReconnect(mbCtx *ctx){
 **/
 mbCtx * mbConfigure(const char * filePath) {
   assert(filePath);
-  mbCtx * ctx = (mbCtx * ) malloc(sizeof(mbCtx));
+  mbCtx *ctx = (mbCtx *) calloc(sizeof(mbCtx), _byte_size_);
   assert(ctx);
-  if ( !deviceConfigure( &ctx->dev, filePath) ) { return NULL; }
+  deviceConfigure(&ctx->dev, filePath);
   return ctx;
 };
 

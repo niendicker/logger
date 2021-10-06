@@ -1,7 +1,7 @@
 
 #include "postgresql.h"
 
-#define _cache_size ((uint)2) /* Rows to be stored in memory before persist */
+#define _cache_size ((uint)10) /* Rows to be stored in memory before persist */
 
 _sqlCtx *sqlCtxInit(_sqlCtx *sqlCtx, char* deviceID){
   assert(deviceID);
@@ -25,7 +25,7 @@ _sqlCtx *sqlCtxInit(_sqlCtx *sqlCtx, char* deviceID){
   /* File used to export data */
   sqlCtx->inoutFile.cacheSize = _cache_size;
   sqlCtx->inoutFile.fileName = salloc(strlen(sqlCtx->pid) + _byte_size_ + strlen(_csv_file_));
-  sprintf(sqlCtx->inoutFile.fileName, "%s_%s", sqlCtx->pid, _csv_file_); /* 12345678_modbuspoll.csv */
+  sprintf(sqlCtx->inoutFile.fileName, "%s_%s", sqlCtx->pid, _csv_file_); /* 12345678_mbpoll.csv */
   sqlCtx->inoutFile.filePath = salloc(strlen(_mbpoll_dataDir_) + strlen(sqlCtx->inoutFile.fileName));
   sprintf(sqlCtx->inoutFile.filePath, "%s%s", _mbpoll_dataDir_, sqlCtx->inoutFile.fileName); 
   return (sqlCtx != NULL ? sqlCtx : NULL);
@@ -79,7 +79,7 @@ int runSql(_sqlCtx *ctx){
 
   uint querySize = strlen(templateQuery) + strlen(ctx->table) + strlen(csvFile);
   int tagSize = 2; 
-  querySize -= tagSize * 2; /* The 2 tags %s will be substituted by values*/
+  querySize -= tagSize * 2; /* The 2 tags %s will be substituted by values TODO: */
   char *query = salloc(querySize);
   sprintf(query, templateQuery, ctx->table, csvFile); /* Set table/file for COPY query */
   char *auth = salloc_init(ctx->auth);
