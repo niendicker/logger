@@ -19,10 +19,9 @@
 #include <stdint.h>
 #include "errorCtrl.h"
 #include "linkedlist.h"
-// /#include "mbTcp.h"
 
 #define \
-FOREACH_CONFIG_DATA_KEY( CONFIG_DATA_KEY )  \
+FOREACH_CONFIG_DATA_KEY( CONFIG_DATA_KEY )   \
         CONFIG_DATA_KEY( tag              )  \
         CONFIG_DATA_KEY( protocol         )  \
         CONFIG_DATA_KEY( hostname         )  \
@@ -45,6 +44,7 @@ enum{
 
 #define \
 FOREACH_MBR_DATA_KEY( MBR_DATA_KEY ) \
+  /*Modbus Register(MBR) Details */  \
         MBR_DATA_KEY( function     ) \
         MBR_DATA_KEY( address      ) \
         MBR_DATA_KEY( size         ) \
@@ -54,7 +54,8 @@ FOREACH_MBR_DATA_KEY( MBR_DATA_KEY ) \
         MBR_DATA_KEY( unit         ) \
         MBR_DATA_KEY( meaning      ) \
         MBR_DATA_KEY( lastValid    ) \
-        MBR_DATA_KEY( _lastTuple_  ) //Include New tuples above ^^^
+        /*Include New tuples here*/  \
+        MBR_DATA_KEY( _lastTuple_  )
 
 #define ENUM_MBR_DATA_KEY(ENUM) ENUM,
 enum mbrDataKeys{

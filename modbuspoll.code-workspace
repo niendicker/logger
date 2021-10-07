@@ -27,7 +27,8 @@
         "main.h": "c",
         "postgresql.h": "c",
         "stat.h": "c",
-        "resources.h": "c"
+        "resources.h": "c",
+        "modbuspoll.h": "c"
       },
       "editor.stickyTabStops": true
    }

@@ -1,6 +1,5 @@
 #! /bin/bash
 
 ##? BUILD ARM
-pwd
-bash ./arm_build.sh && ./update_arm.sh
+bash ./00_rpi/build/arm_build.sh && ./00_rpi/build/update_arm.sh
 

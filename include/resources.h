@@ -18,9 +18,11 @@
 #include <stdint.h>
 #include <string.h>
 #include <time.h>  /* clock() */
+#include <dirent.h> /* Directory stream functionalities */
 
 #define _str_null_  ((uint8_t)1)
 #define _byte_size_ ((uint8_t)1)
+
 
 typedef enum __timer{ /* cpu_time() options */
   _start_,
@@ -79,5 +81,8 @@ char *srealloc_copy(char* pstr, char* str);
  * @return elapsed cpu time 
 **/
 double cpu_time(_timer command);
+
+char **getConfigs(char *configDir, char *fileExtension);
+
 
 #endif /* resources.h */

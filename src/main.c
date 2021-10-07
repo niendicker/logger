@@ -16,9 +16,12 @@ int main(int argc , char *argv[]) {
     help();
     exit(done);
   }
-  mbCtx* mbDevice;
-  mbDevice = mbInit(argv[configFile]);
-  assert(mbDevice);
+
+  mbCtx **devices;
+  devices = initDevices("./dev/");
+  if(!devices[0])
+    exit(EXIT_FAILURE);
+  mbCtx *mbDevice = devices[0];
   if( mbTcpConnect(mbDevice) == failure ) {
     exit(failure);
   }
@@ -27,7 +30,7 @@ int main(int argc , char *argv[]) {
   const int64_t pollCount = strtol( argv[pollingCount], NULL, 10);
   const uint8_t eThreshold = (uint8_t)strtol( argv[errorMax], NULL, 10);
 
-  for (int poll = -1, eCount = 0; true ; ) { /* until communication error is below the threshold received from argv[3] */
+  for (int poll = -1, eCount = 0;;) { /* until communication error is below the threshold received from argv[3] */
     poll += (pollCount > 0) ? 1 : 0; /* 0 means polling forever */
     if(poll < pollCount){
       if (mbUpdate(mbDevice) == failure)

@@ -30,6 +30,7 @@
 #include "resources.h"
 
 #define _mbpoll_std_ip_ ((char*)"MOD.BUS.POL.L:)")
+#define _mbpoll_max_dev_ ((int)10)
 
 enum polling{
   min_timeout_ms=100

@@ -102,7 +102,7 @@ void deviceMap(device *dev){
     if( ( IGNORE( _kv[0] ) ) || ( ! TOKEN_KEY_MATCH( _kv, startTag) ) ) {
          continue; /* Comments */
     }/* Found a register start tag */
-    _ln *newMbr = (_ln*)malloc(sizeof(_ln)); /* Create a new register */
+    _ln *newMbr = (_ln*)calloc(sizeof(_ln), _byte_size_); /* Create a new register */
     assert(newMbr); 
     pushNode(newMbr);
     for( int i = 0; i < _lastTuple_; i++) {  

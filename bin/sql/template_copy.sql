@@ -1,1 +1,1 @@
-"COPY %s FROM '%s' DELIMITER ',' CSV HEADER ;"
+"COPY modbuspoll.%s FROM '%s' DELIMITER ',' CSV HEADER ;"

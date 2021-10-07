@@ -97,7 +97,7 @@ int runSql(_sqlCtx *ctx){
   uint cmdSize = strlen(auth) + strlen(psql) + strlen(hostname) + 
                  strlen(port) + strlen(database) + strlen(user) + 
                  strlen(query) + strlen(cmdTemplate);
-  cmdSize -= tagSize * 7;
+  cmdSize -= tagSize * 7; /* sprintf remove tags */
   char *cmd = (char*)salloc(cmdSize);
   sprintf(/*Output  */ cmd, 
           /*Template*/ cmdTemplate, 

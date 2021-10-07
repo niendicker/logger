@@ -18,6 +18,7 @@
 #include "errorCtrl.h"
 #include "mbTcp.h"
 #include "postgresql.h"
+#include "modbuspoll.h"
 
 #define MIN_POLL_TIME 100 //ms
 

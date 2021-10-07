@@ -79,3 +79,34 @@ double cpu_time(_timer command){
   }
   return (((double)(end-begin))/CLOCKS_PER_SEC);
 }
+
+const char *get_filename_ext(const char *filename) {
+    const char *dot = strrchr(filename, '.');
+    if(!dot || dot == filename) return "";
+    return dot + 1;
+}
+
+char **getConfigs(char *configDir, char *confExt){
+  assert(configDir && confExt);
+  DIR *config;
+  config = opendir(configDir);
+  if(config == NULL)
+    return NULL;
+  struct dirent *dir;
+  const int maxFiles = 10; 
+  static char *devices[10];
+  uint64_t confExH = djb2_hash(confExt);
+  for(int i=0; ((dir = readdir(config)) && (i < maxFiles)) ;) {
+    strtok(dir->d_name, ".");
+    const char *fileExt = strtok(NULL, ".");
+    if(!fileExt)
+      continue;
+    if(djb2_hash(fileExt) == confExH){
+      devices[i] = salloc(strlen(dir->d_name) + strlen(fileExt));
+      sprintf(devices[i], "%s.%s", dir->d_name, confExt);
+      i++;
+    }
+  }
+  closedir(config);
+  return devices;
+};
