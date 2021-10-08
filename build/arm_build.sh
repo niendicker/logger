@@ -19,9 +19,9 @@ done
 echo arm-linux-gnueabihf-g++ -Wall -g -o "${bin_output}_dbg.arm" -I "$include_home" "${sourceFiles[@]}" && \
 arm-linux-gnueabihf-g++ -Wall -g -o "${bin_output}_dbg.arm" -I "$include_home" "${sourceFiles[@]}" && \
 echo "ARM: Debug version compiled succesful" 
-#Production version
 
-echo arm-linux-gnueabihf-g++ -D NDEBUG -Wall -g -o "${bin_output}.arm" -I "$include_home" "${sourceFiles[@]}" && \
+#Production version - DONT DEFINE NDEBUG TO KEEP ASSERTS()
+echo arm-linux-gnueabihf-g++ -D QUIET_OUTPUT -Wall -g -o "${bin_output}.arm" -I "$include_home" "${sourceFiles[@]}" && \
 arm-linux-gnueabihf-g++ -D NDEBUG -Wall -g -o "${bin_output}.arm" -I "$include_home" "${sourceFiles[@]}" && \
 echo "ARM: Production version copilled successful"
 

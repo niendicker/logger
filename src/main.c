@@ -35,7 +35,7 @@ int main(int argc , char *argv[]) {
     if(poll < pollCount){
       if (mbUpdate(mbDevice) == failure)
         eCount += eThreshold > 0 ? 1 : 0;
-      if(saveData(mbDevice) == -1){
+      if(saveData(mbDevice) == -1){ /* Just notify and keep polling */
 #ifndef QUIET_OUTPUT
       printf("\nError: Can't save data \n");
 #endif        
