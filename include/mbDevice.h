@@ -22,6 +22,12 @@
 
 #define \
 FOREACH_CONFIG_DATA_KEY( CONFIG_DATA_KEY )   \
+        /* Polling parameters */             \
+        CONFIG_DATA_KEY( pollingInterval_ms) \
+        CONFIG_DATA_KEY( pollingIteractions) \
+        CONFIG_DATA_KEY( pollingErrorMax   ) \
+        /* Modbus device parameters */       \
+        CONFIG_DATA_KEY( mapFile          )  \
         CONFIG_DATA_KEY( tag              )  \
         CONFIG_DATA_KEY( protocol         )  \
         CONFIG_DATA_KEY( hostname         )  \
@@ -34,8 +40,7 @@ FOREACH_CONFIG_DATA_KEY( CONFIG_DATA_KEY )   \
         CONFIG_DATA_KEY( stopBits         )  \
         CONFIG_DATA_KEY( parity           )  \
         CONFIG_DATA_KEY( handshake        )  \
-        CONFIG_DATA_KEY( mapFile          )  \
-        CONFIG_DATA_KEY( _lastConfOption_ )  //Include New params above ^^^
+        CONFIG_DATA_KEY( _lastConfOption_ )  
 
 #define ENUM_CONFIG_DATA_KEY(ENUM) ENUM,
 enum{
@@ -54,7 +59,6 @@ FOREACH_MBR_DATA_KEY( MBR_DATA_KEY ) \
         MBR_DATA_KEY( unit         ) \
         MBR_DATA_KEY( meaning      ) \
         MBR_DATA_KEY( lastValid    ) \
-        /*Include New tuples here*/  \
         MBR_DATA_KEY( _lastTuple_  )
 
 #define ENUM_MBR_DATA_KEY(ENUM) ENUM,
