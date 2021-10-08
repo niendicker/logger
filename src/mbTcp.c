@@ -15,7 +15,7 @@
 
 #define LTOS_LSB(LONG) (LONG & 0xFF)
 #define LTOS_MSB(LONG) ((LONG >> 8) & 0xFF)
-#define STOL(S_MSB, S_LSB) (((S_MSB << 8) & 0xFF) || (S_LSB & 0xFF))
+#define STOL(S_MSB, S_LSB) ( (uint16_t)(S_MSB << 8) + S_LSB )
 
 /**
  * @brief Load context config parameters from filePath file
@@ -87,7 +87,7 @@ int mbUpdate(mbCtx *ctx) {
   uint8_t commFailure = 0;
   _ln *mbr = ctx->dev.mbr;
   while(mbr){ 
-    if ( mbSendRequest(ctx) == failure || mbGetReply(ctx) == failure ) { /* Dont call mbGetReply if mbSendRequest fails */
+    if ( mbSendRequest(ctx) == failure || mbGetReply(ctx, mbr) == failure ) { /* Dont call mbGetReply if mbSendRequest fails */
       mbTcpReconnect(ctx);
       commFailure++;
     }
@@ -283,7 +283,7 @@ uint32_t waitReply(mbCtx *ctx){ /*//TODO Implement some tunning for wait */
 /**
  * @brief  After a request is sended to slave this function get and process the reply
 **/
-int mbGetReply(mbCtx *ctx) {
+int mbGetReply(mbCtx *ctx, _ln *mbr) {
   assert(ctx && ctx->dev.link.modbusTcp.socket);
   int replyDelay = waitReply(ctx);
   if(replyDelay == failure){
@@ -297,21 +297,38 @@ int mbGetReply(mbCtx *ctx) {
   _mbReplyRaw(ctx);
   printf("Info: Reply time  : ~%.02f ms\n", replyDelay/10E2);
 #endif 
-  if( replySize < (reply_exception) ) { /* Unknown modbus reply */
+  if( replySize < reply_exception ) { /* Unknown modbus reply */
 #ifndef QUIET_OUTPUT
     puts("Error: Unknown modbus reply \n");
     puts("Error: To short reply");
 #endif
     return failure;
   }
-  if( replySize == (reply_exception) ) { /* Exception received */
+  if( replySize == reply_exception ) { /* Exception received */
 #ifndef QUIET_OUTPUT
     puts("Error: Exception received");  
 #endif
     return failure;
   }
-  if( replySize == (reply_size_max) ) { /* Requested data received?!?! */
-    return mbParseReply(ctx);
+  if( replySize == reply_size_max ) { /* Requested data received*/
+    if(mbParseReply(ctx) == done){
+      /* Update lastValid for current modbus register */
+      uint8_t plSz = (uint8_t)ctx->dev.rxADU[_replySZ]; /* Reply payload size */ 
+      char *payload = (char*)calloc(plSz, _byte_size_);
+      for (uint8_t i = 0; i < 2; i++) {
+        payload[i] = ctx->dev.rxADU[ _replyData + i ];
+      }
+      uint8_t msb = (uint8_t)payload[0], lsb = (uint8_t)payload[1];
+      uint32_t value = STOL(msb, lsb);
+      long scale = strtol(mbrValue(mbr, scale) , NULL, 10);
+      char *floatValue = salloc(strlen("10000.00"));
+      sprintf(floatValue, "%5.02f", (float)value/scale);
+      updateValue(mbr, (char*)"lastValid", floatValue);      
+      free(payload);
+      free(floatValue);
+      return done;
+    }
+      
   }
 #ifndef QUIET_OUTPUT
   puts("Error: Unknown modbus reply");
@@ -348,12 +365,6 @@ int mbParseReply(mbCtx *ctx){
   uID  = (uint8_t)ctx->dev.rxADU[_uID]; 
   fCD  = (uint8_t)ctx->dev.rxADU[_replyFC]; /* PDU */ 
   plSz = (uint8_t)ctx->dev.rxADU[_replySZ]; /* Reply payload size */ 
-  
-  char *dataTest = (char*)calloc(plSz, _byte_size_);
-  for (uint8_t i = 0; i < plSz; i++) {
-    dataTest[i] = ctx->dev.rxADU[ _replyData + i ];
-  }
-
   if(tID != ctx->adu.mbap._tID){  /* Transaction ID need to be the same for query/reply */
 #ifndef QUIET_OUTPUT
     printf("Error: Transaction ID \n\n");
@@ -391,13 +402,6 @@ int mbParseReply(mbCtx *ctx){
 #endif   
     return failure;
   }
-  char *data = salloc(plSz);
-  for (uint8_t i = 0; i < plSz; i++) {
-    data[i] = ctx->dev.rxADU[ _replyData + i ];
-  }
-#ifndef QUIET_OUTPUT
-  printf("Info: New value %d \n", 0);
-#endif  
   return done;
 };
 
