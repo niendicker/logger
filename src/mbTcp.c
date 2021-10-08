@@ -57,7 +57,7 @@ int mbTcpConnect(mbCtx *ctx) {
   if(ipHash == defaultIpHash){ /* Invalid IP. Trying DNS translation from hostname */
     char *hostname = salloc_init(confValue(ctx->dev.config, hostname));
     assert(hostname);
-    ipAddress = srealloc_copy(ipAddress, htoip(hostname));
+    ipAddress = srealloc_copy(ipAddress, htoip(hostname)); /* overwrite IP parameter for current instance */
   }
   struct sockaddr_in mbServer; /* Set connection parameters */
   mbServer.sin_addr.s_addr = inet_addr(ipAddress);
@@ -66,13 +66,17 @@ int mbTcpConnect(mbCtx *ctx) {
 #ifndef QUIET_OUTPUT
   printf("Info: Connecting to %s @%s:%d \n", confValue(ctx->dev.config, tag), ipAddress, ctx->dev.link.modbusTcp.port);
 #endif
+  struct timeval timeout;
+  timeout.tv_sec  = 7;  // after 7 seconds connect() will timeout
+  timeout.tv_usec = 0;
+  setsockopt(*fdSocket, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(timeout));
   if (connect(*fdSocket, (struct sockaddr *)&mbServer, sizeof(mbServer)) == failure) {
 #ifndef QUIET_OUTPUT
     printf("Error: Connection refused from %s \n", confValue(ctx->dev.config, tag));
 #endif
     return failure;
   } 
-                              /* overwrite IP parameter for current instance */
+
 #ifndef QUIET_OUTPUT
   printf("Info: Connected to %s \n", confValue(ctx->dev.config, tag));
 #endif
