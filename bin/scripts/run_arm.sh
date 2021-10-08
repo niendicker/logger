@@ -15,5 +15,7 @@ else #RUN PRODUCTION VERSION
   cd .. &&          \
   nohup             \
   ./modbusPoll.arm "${configDir}" \
-  &>/dev/null & disown          
+  &>/dev/null \
+  & 
+  disown          
 fi
