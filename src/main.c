@@ -18,7 +18,7 @@ int main(int argc , char *argv[]) {
   }
 
   mbCtx **devices;
-  devices = initDevices("./dev/");
+  devices = initDevices((char*)"./dev/");
   if(!devices[0])
     exit(EXIT_FAILURE);
   mbCtx *mbDevice = devices[0];
@@ -35,16 +35,20 @@ int main(int argc , char *argv[]) {
     if(poll < pollCount){
       if (mbUpdate(mbDevice) == failure)
         eCount += eThreshold > 0 ? 1 : 0;
-      saveData(mbDevice);
+      if(saveData(mbDevice) == -1){
+#ifndef QUIET_OUTPUT
+      printf("\nError: Can't save data \n");
+#endif        
+      }
     }
     else {
-#ifndef NDEBUG
+#ifndef QUIET_OUTPUT
       printf("\nInfo: Polling terminated due to argument polling count\n");
 #endif
       break;
     }
     if (eCount >= (eThreshold+1)) {
-#ifndef NDEBUG 
+#ifndef QUIET_OUTPUT 
       printf("\nError: Polling terminated due to communication error limit\n");
 #endif
       break;

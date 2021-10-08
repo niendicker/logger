@@ -16,7 +16,7 @@ mbCtx **initDevices(char *configDir){
   for (int i = 0; i < _mbpoll_max_dev_; i++){
     devices[i] = NULL;
   }
-  char **configFiles = getConfigs(configDir, "conf");
+  char **configFiles = getConfigs(configDir, (char*)"conf");
   char *configFullPath = salloc_init(configDir);
   for(int i =0; configFiles[i]; i++){
     srealloc(configFullPath, strlen(configFullPath)+strlen(configFiles[i]));
