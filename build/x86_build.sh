@@ -20,7 +20,7 @@ echo gcc -Wall -g -o "${bin_output}_dbg.bin" -I "$include_home" "${sourceFiles[@
 gcc -Wall -g -o "${bin_output}_dbg.bin" -I "$include_home" "${sourceFiles[@]}" && \
 echo "Debug version copilled successful"
 
-#Production version 
-echo gcc -Wall -g -o "${bin_output}.bin" -I "$include_home" "${sourceFiles[@]}"
-gcc -D NDEBUG -Wall -g -o "${bin_output}.bin" -I "$include_home" "${sourceFiles[@]}" && \
+#Production version - DONT DEFINE NDEBUG TO KEEP ASSERTS()
+echo gcc -D QUIET_OUTPUT -Wall -g -o "${bin_output}.bin" -I "$include_home" "${sourceFiles[@]}"
+gcc -D QUIET_OUTPUT -Wall -g -o "${bin_output}.bin" -I "$include_home" "${sourceFiles[@]}" && \
 echo "Production version copilled successful"

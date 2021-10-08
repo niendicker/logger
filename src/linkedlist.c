@@ -50,6 +50,24 @@ char *peekValue(_ln *listNode, char *key){
 };
 
 /**
+ * @brief  Update the value of a given key
+ * @return _mbrTupleNode|NULL
+ */
+char *updateValue(_ln *listNode, char *key, char* value){
+  assert(listNode->data && key && value);
+  uint64_t hash = djb2_hash(key);
+  _dn *data = listNode->data;
+  while( data ){
+    if( hash == data->keyHash ) {       
+      data->value = srealloc_copy(data->value ,value); 
+    }
+    data = data->next;
+  }
+  return NULL;
+};
+
+
+/**
  * @brief  Print to stdout the data of a given list node
  */
 void listNode(_ln *listNode){

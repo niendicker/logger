@@ -245,7 +245,7 @@ uint32_t waitReply(mbCtx *ctx);
  * @param  ctx Modbus device Context
  * @return done|failure
  */
-int mbGetReply(mbCtx *ctx);
+int mbGetReply(mbCtx *ctx, _ln *mbr);
 
 /**
  * @brief Print to stdout received ADU raw data

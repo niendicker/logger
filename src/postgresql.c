@@ -83,7 +83,7 @@ int runSql(_sqlCtx *ctx){
   char *query = salloc(querySize);
   sprintf(query, templateQuery, ctx->table, csvFile); /* Set table/file for COPY query */
   char *auth = salloc_init(ctx->auth);
-#ifndef NDEBUG  
+#ifndef QUIET_OUTPUT  
   char *psql = (char*)"psql";
 #else 
   char *psql = (char*)"psql -q";  /* Be quiet */
@@ -180,11 +180,11 @@ char *appendCsvData(_ln *deviceData, char *row){
 
 int persistData(char *deviceID, _ln *deviceData){
   assert(deviceID && deviceData);
-  static double dTime = 0;
+  static double dTime = _start_;
   static char *dataBuffer;
   static _sqlCtx *sqlCtx;
-  if(dTime == 0){ /* Start bufferring device data */
-    dTime = cpu_time(_start_);
+  if(dTime == _start_){ /* Start bufferring device data */
+    cpu_time(_start_);
     sqlCtx = sqlCtxInit(sqlCtx, deviceID);
     _ln *dataAvaliable = deviceData;
     char *csvHeader = insertCsvHeader(dataAvaliable);
@@ -194,12 +194,13 @@ int persistData(char *deviceID, _ln *deviceData){
   dTime = cpu_time(_check_);
   if( dTime > sqlCtx->inoutFile.persist_dt ) { /* Dump/Store buffered device data */
     FILE *outputFile = fopen(sqlCtx->inoutFile.fileName, "w+");
-    assert(outputFile);
+    if(outputFile == NULL)
+      return -1;
     int outFileWritten = fprintf(outputFile, "%s", dataBuffer); 
     fclose(outputFile);
     if (outFileWritten){
       runSql(sqlCtx);  /* import dumped data to postgres using psql */
-#ifndef NDEBUG
+#ifndef QUIET_OUTPUT
       printf("Info: Buffered data saved\n");
 #endif
     } 
