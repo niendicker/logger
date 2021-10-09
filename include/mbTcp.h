@@ -24,7 +24,7 @@
 #include <sys/socket.h>                            
 #include <arpa/inet.h>	/* inet_addr */
 #include <netdb.h>	    /* hostent */
-#include "errorCtrl.h"
+#include "error.h"
 #include "mbDevice.h"
 #include "postgresql.h"
 #include "resources.h"

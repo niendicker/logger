@@ -20,7 +20,7 @@ sql_home="$files_home/sql"
 sql_files=()
 
 # Bin Folder
-for file in "$files_home"/*.arm
+for file in "$files_home"/*.arm "$files_home"/pgpass
 do
   source_files+=( "$file" )
 done

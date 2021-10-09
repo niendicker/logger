@@ -15,7 +15,7 @@
 #define VERSION_MAJOR "00"
 #define VERSION_MINOR "00"
 #include <stdbool.h>
-#include "errorCtrl.h"
+#include "error.h"
 #include "mbTcp.h"
 #include "postgresql.h"
 

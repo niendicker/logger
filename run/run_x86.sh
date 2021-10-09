@@ -4,10 +4,7 @@
 # $2: Version to run 
 #     0 = Run production version anything else = Run debug version  
 
-configFile="./dev/gc600.conf"
-pollingInterval_ms=500
-pollingIteractions=0 
-pollingErrorMax=0
+configDir="./dev/"
 maxInstances=50
 
 if [ $# -lt 2 ]; 
@@ -26,29 +23,18 @@ do
 
 if [ "$2" -ne 0 ];  
 then #RUN DEBUG VERSION
-  
   echo "Loading instance $instances in debug mode..."
-  cd ./00_rpi/bin &&      \
-  ./modbusPoll_dbg.bin    \
-  "${configFile}"         \
-  "${pollingInterval_ms}" \
-  "${pollingIteractions}" \
-  "${pollingErrorMax}"    
-
+  cd ../bin &&      \
+  ./modbusPoll_dbg.bin    "${configDir}" 
 else #RUN PRODUCTION VERSION
-  
   echo "Loading instance $instances in production mode..."
-  cd ./00_rpi/bin &&      \
+  cd ../bin &&      \
   nohup                   \
   ./modbusPoll.bin        \
-  "${configFile}"         \
-  "${pollingInterval_ms}" \
-  "${pollingIteractions}" \
-  "${pollingErrorMax}"    \
+  "${configDir}"         \
   &>/dev/null             \
   &                       
   disown          
-
 fi
 
 done
