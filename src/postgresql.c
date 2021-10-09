@@ -11,12 +11,14 @@ _sqlCtx *sqlCtxInit(_sqlCtx *sqlCtx, _ln *deviceConfig){
   sqlCtx->pid = salloc(str_digits(pid)); 
   sprintf(sqlCtx->pid, "%d", pid);
   assert(sqlCtx->pid);
-  sqlCtx->hostname = salloc_init(_pgsql_host_);
-  sqlCtx->port     = _pgsql_port_;
-  sqlCtx->auth     = salloc_init(_mbpoll_auth_);
-  sqlCtx->user     = salloc_init(_mbpoll_user_);
-  sqlCtx->database = salloc_init(_mbpoll_database_);
-  sqlCtx->schema   = salloc_init(_mbpoll_schema_);
+  sqlCtx->hostname = salloc_init(peekValue( deviceConfig, (char*)"pgsqlHost"));
+  sqlCtx->port     = (uint16_t)strtol(peekValue(deviceConfig, (char*)"pgsqlPort"), NULL, 10);
+  char *auth = salloc_init(peekValue(deviceConfig, (char*)"pgsqlAuth"));
+  sqlCtx->auth = salloc(strlen(auth));
+  sprintf(sqlCtx->auth, auth, '='); /* put '=' signal  */
+  sqlCtx->user     = salloc_init(peekValue( deviceConfig, (char*)"pgsqlUser"));
+  sqlCtx->database = salloc_init(peekValue( deviceConfig, (char*)"pgsqlDatabase"));
+  sqlCtx->schema   = salloc_init(_mbpoll_schema_); /* Schema is defined on sql template */
   char *deviceID = salloc_init(peekValue(deviceConfig, (char*)"tag"));
   sqlCtx->table    = salloc(strlen(_mbpoll_table_) + _byte_size_ +strlen(deviceID));
   sprintf(sqlCtx->table, "%s_%s", deviceID, _mbpoll_table_); /* deviceID_modbuspoll */
@@ -30,6 +32,7 @@ _sqlCtx *sqlCtxInit(_sqlCtx *sqlCtx, _ln *deviceConfig){
   sqlCtx->inoutFile.filePath = salloc(strlen(_mbpoll_dataDir_) + strlen(sqlCtx->inoutFile.fileName));
   sprintf(sqlCtx->inoutFile.filePath, "%s%s", _mbpoll_dataDir_, sqlCtx->inoutFile.fileName); 
   free(deviceID);
+  free(auth);
   return (sqlCtx != NULL ? sqlCtx : NULL);
 };
 
