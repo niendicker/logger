@@ -83,7 +83,7 @@ typedef struct __sqlContext {
   _csvCtx inoutFile;
 } _sqlCtx;
 
-_sqlCtx *sqlCtxInit(_sqlCtx *sqlCtx, char* deviceID);
+_sqlCtx *sqlCtxInit(_sqlCtx *sqlCtx, _ln *deviceConfig);
 
 int sqlCtxFree(_sqlCtx *sqlCtx);
 
@@ -92,7 +92,7 @@ int sqlCtxFree(_sqlCtx *sqlCtx);
 **/
 char *timestampz();
 
-int persistData(char *deviceID, _ln *data);
+int persistData(_ln *data, _ln *deviceConfig);
 
 /**
  * @brief  Execute the sqlFile against postgres using psql interface

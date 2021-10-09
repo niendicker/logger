@@ -3,8 +3,8 @@
 
 #define _cache_time ((double)10/10E2) /* Elapsed time(s) between export data do postgres  */
 
-_sqlCtx *sqlCtxInit(_sqlCtx *sqlCtx, char* deviceID){
-  assert(deviceID);
+_sqlCtx *sqlCtxInit(_sqlCtx *sqlCtx, _ln *deviceConfig){
+  assert(deviceConfig);
   sqlCtx = (_sqlCtx*)calloc(sizeof(_sqlCtx), _byte_size_);
   assert(sqlCtx);
   pid_t pid = getpid();
@@ -17,6 +17,7 @@ _sqlCtx *sqlCtxInit(_sqlCtx *sqlCtx, char* deviceID){
   sqlCtx->user     = salloc_init(_mbpoll_user_);
   sqlCtx->database = salloc_init(_mbpoll_database_);
   sqlCtx->schema   = salloc_init(_mbpoll_schema_);
+  char *deviceID = salloc_init(peekValue(deviceConfig, (char*)"tag"));
   sqlCtx->table    = salloc(strlen(_mbpoll_table_) + _byte_size_ +strlen(deviceID));
   sprintf(sqlCtx->table, "%s_%s", deviceID, _mbpoll_table_); /* deviceID_modbuspoll */
   /* Template SQL script to be executed agaist postgres */
@@ -28,6 +29,7 @@ _sqlCtx *sqlCtxInit(_sqlCtx *sqlCtx, char* deviceID){
   sprintf(sqlCtx->inoutFile.fileName, "%s_%s", sqlCtx->pid, _csv_file_); /* 12345678_mbpoll.csv */
   sqlCtx->inoutFile.filePath = salloc(strlen(_mbpoll_dataDir_) + strlen(sqlCtx->inoutFile.fileName));
   sprintf(sqlCtx->inoutFile.filePath, "%s%s", _mbpoll_dataDir_, sqlCtx->inoutFile.fileName); 
+  free(deviceID);
   return (sqlCtx != NULL ? sqlCtx : NULL);
 };
 
@@ -178,14 +180,14 @@ char *appendCsvData(_ln *deviceData, char *row){
   return (row != NULL ? row : NULL );
 };
 
-int persistData(char *deviceID, _ln *deviceData){
-  assert(deviceID && deviceData);
+int persistData(_ln *deviceData, _ln *deviceConfig){
+  assert(deviceData && deviceConfig);
   static double dTime = _start_;
   static char *dataBuffer;
   static _sqlCtx *sqlCtx;
   if(dTime == _start_){ /* Start bufferring device data */
     cpu_time(_start_);
-    sqlCtx = sqlCtxInit(sqlCtx, deviceID);
+    sqlCtx = sqlCtxInit(sqlCtx, deviceConfig);
     _ln *dataAvaliable = deviceData;
     char *csvHeader = insertCsvHeader(dataAvaliable);
     dataBuffer = salloc_init(csvHeader);
