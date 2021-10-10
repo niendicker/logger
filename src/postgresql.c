@@ -79,6 +79,7 @@ int runSql(_sqlCtx *ctx){
     templateQuery = srealloc(templateQuery, templateNewSize);
     strcat(templateQuery, line);
   };
+  fclose(templateFile);
   char *csvFile = ctx->inoutFile.filePath; 
   assert(csvFile);
 
@@ -108,7 +109,7 @@ int runSql(_sqlCtx *ctx){
           /*Template*/ cmdTemplate, 
           /*Values  */ auth, psql, hostname, port, database, user, query);
   int s = system(cmd); /* run query */
-  
+
   free(cmd);
   free(database);
   free(port);

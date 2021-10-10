@@ -15,7 +15,7 @@
 
 #define LTOS_LSB(LONG) (LONG & 0xFF)
 #define LTOS_MSB(LONG) ((LONG >> 8) & 0xFF)
-#define STOL(S_MSB, S_LSB) ( (uint16_t)(S_MSB << 8) + S_LSB )
+#define STOL(S_MSB, S_LSB) ( (int16_t)(S_MSB << 8) + S_LSB )
 
 /**
  * @brief Load context config parameters from filePath file
@@ -91,7 +91,7 @@ int mbUpdate(mbCtx *ctx) {
   uint8_t commFailure = 0;
   _ln *mbr = ctx->dev.mbr;
   while(mbr){ 
-    if ( mbSendRequest(ctx) == failure || mbGetReply(ctx, mbr) == failure ) { /* Dont call mbGetReply if mbSendRequest fails */
+    if ( mbSendRequest(ctx, mbr) == failure || mbGetReply(ctx, mbr) == failure ) { /* Dont call mbGetReply if mbSendRequest fails */
       mbTcpReconnect(ctx);
       commFailure++;
     }
@@ -203,8 +203,8 @@ int mbInitMBAP(mbCtx *ctx) {
   ctx->dev.txADU[ _tIDMsb ] = (uint8_t)LTOS_MSB(tID);
   ctx->dev.txADU[ _pIDLsb ] = (uint8_t)LTOS_LSB(pID);
   ctx->dev.txADU[ _pIDMsb ] = (uint8_t)LTOS_MSB(pID);
-  ctx->dev.txADU[ _dSZLsb ] = (uint8_t)LTOS_LSB(uID);
-  ctx->dev.txADU[ _dSZMsb ] = (uint8_t)LTOS_MSB(uID);
+  ctx->dev.txADU[ _dSZLsb ] = (uint8_t)LTOS_LSB(fBytes);
+  ctx->dev.txADU[ _dSZMsb ] = (uint8_t)LTOS_MSB(fBytes);
   ctx->dev.txADU[ _uID    ] = uID;
   ctx->adu.mbap._tID    = tID;
   ctx->adu.mbap._pID    = pID;
@@ -216,12 +216,12 @@ int mbInitMBAP(mbCtx *ctx) {
 /**
  * @brief  Initialize the PDU of ADU
 **/
-int mbInitPDU(mbCtx *ctx) {
+int mbInitPDU(mbCtx *ctx, uint8_t fCode, uint16_t mbrAddress, uint16_t mbrSize) {
   assert(ctx && ctx->dev.mbr);
-  _ln *mbr = ctx->dev.mbr;
-  uint8_t fCode = (uint8_t)strtol(mbrValue(mbr, function) , NULL, 10);
-  uint16_t mbrAddress = (uint16_t)strtol(mbrValue(mbr, address) , NULL, 10);
-  uint16_t mbrSize = (uint16_t)strtol(mbrValue(mbr,   size) , NULL, 10);
+  //_ln *mbr = ctx->dev.mbr;
+  //uint8_t fCode = (uint8_t)strtol(mbrValue(mbr, function) , NULL, 10);
+  //uint16_t mbrAddress = (uint16_t)strtol(mbrValue(mbr, address) , NULL, 10);
+  //uint16_t mbrSize = (uint16_t)strtol(mbrValue(mbr,   size) , NULL, 10);
   ctx->dev.txADU[ _fCode      ] = fCode;
   ctx->dev.txADU[ _mbrAddrLsb ] = (uint8_t)LTOS_LSB(mbrAddress);
   ctx->dev.txADU[ _mbrAddrMsb ] = (uint8_t)LTOS_MSB(mbrAddress);
@@ -236,10 +236,13 @@ int mbInitPDU(mbCtx *ctx) {
 /**
  * @brief  Send modbus query to device
 **/
-int mbSendRequest(mbCtx *ctx){
+int mbSendRequest(mbCtx *ctx, _ln *mbr){
   assert(ctx && ctx->dev.link.modbusTcp.socket && ctx->dev.mbr);
   mbInitMBAP(ctx); /* copy data from internal structure to txVector */
-  mbInitPDU(ctx);
+  uint8_t fCode = (uint8_t)strtol(mbrValue(mbr, function) , NULL, 10);
+  uint16_t mbrAddress = (uint16_t)strtol(mbrValue(mbr, address) , NULL, 10);
+  uint16_t mbrSize = (uint16_t)strtol(mbrValue(mbr,   size) , NULL, 10);
+  mbInitPDU(ctx, fCode, mbrAddress, mbrSize);
 #ifndef QUIET_OUTPUT
   _mbRequestRaw(ctx);
 #endif 
@@ -285,6 +288,109 @@ uint32_t waitReply(mbCtx *ctx){ /*//TODO Implement some tunning for wait */
 };
 
 /**
+ * @brief Print to stdout received ADU raw data
+**/
+int _mbReplyRaw(const mbCtx *ctx){
+  assert(ctx);
+  printf("Info: Modbus Reply: ");
+  for (size_t i = 0; i < _adu_size_; i++){
+    uint8_t data = (uint8_t)ctx->dev.rxADU[i];
+    printf("%02X", data); /* Hex value */
+  }
+  printf("\n");
+  return done;
+};
+
+/**
+ * @brief Interpret and update lstValid for specific mbr
+ */
+int mbUpdateValue(mbCtx *ctx, _ln *mbr){
+  uint8_t plSz = (uint8_t)ctx->dev.rxADU[_replySZ]; /* Reply payload size */ 
+  char *payload = (char*)calloc(plSz, _byte_size_);
+  for (uint8_t i = 0; i < plSz; i++) {
+    payload[i] = ctx->dev.rxADU[ _replyData + i ];
+  }
+  uint8_t fCode    = strtol(mbrValue(mbr, function), NULL, 10);
+  uint8_t isSigned = strtol(mbrValue(mbr, signal  ), NULL, 10);
+  int32_t raw_value = (int8_t)payload[0];
+  float value = 0.0;
+  if( fCode >= readHoldingRegisters ){ /* WORD SIZE(16bits) VALUES */
+    int8_t msb = (int8_t)payload[0], lsb = (int8_t)payload[1];
+    raw_value = STOL(msb, lsb);
+  }
+  else{ /* 8bits value */
+    raw_value = payload[0];
+  }
+  int16_t scl = strtol(mbrValue(mbr, scale   ), NULL, 10);
+  if(isSigned) 
+    value = (float4_t)raw_value/scale;
+  else 
+    value = (float4_t)(((uint16_t)raw_value)/scl);
+  char *floatValue = salloc(strlen("10000.00"));
+  sprintf(floatValue, "%5.02f", value);
+  updateValue(mbr, (char*)"lastValid", floatValue);      
+  free(payload);
+  free(floatValue);
+  return done;
+};
+
+/**
+ * @brief When a correct modbus reply data size is received
+ *        this function parse and save received data to ctx  
+**/
+int mbParseReply(mbCtx *ctx, uint8_t replySize){
+  assert(ctx);
+  if(replySize < reply_size_min)
+    return failure;
+  uint16_t tID, pID, fBytes;
+  uint8_t uID, fCD, plSz;
+  tID  = (uint16_t)STOL(ctx->dev.rxADU[ _tIDMsb ], ctx->dev.rxADU[ _tIDLsb ]); /* MBAP */
+  pID  = (uint16_t)STOL(ctx->dev.rxADU[ _pIDMsb ], ctx->dev.rxADU[ _pIDLsb ]); 
+  fBytes = (uint16_t)STOL(ctx->dev.rxADU[ _dSZMsb ], ctx->dev.rxADU[ _dSZMsb ]);
+  uID  = (uint8_t)ctx->dev.rxADU[_uID]; 
+  fCD  = (uint8_t)ctx->dev.rxADU[_replyFC]; /* PDU */ 
+  plSz = (uint8_t)ctx->dev.rxADU[_replySZ]; /* Reply payload size */ 
+  if(tID != ctx->adu.mbap._tID){  /* Transaction ID need to be the same for query/reply */
+#ifndef QUIET_OUTPUT
+    printf("Error: Transaction ID %d \n", tID);
+#endif    
+    return failure;
+  }
+  if(pID != ctx->adu.mbap._pID){     /* Standard 0 = modbus tcp  */
+#ifndef QUIET_OUTPUT
+    printf("Error: pID %d \n", pID);
+#endif    
+    return failure;
+  }
+  if(uID != ctx->dev.link.modbusRtu.unitAddress){ /* Unit ID is the modbus RTU (Serial comm.) address */
+#ifndef QUIET_OUTPUT
+    printf("Error: Unit ID %d \n", uID);
+#endif    
+    return failure;
+  }
+  uint8_t fcdRequest = ctx->adu.pdu.functionCode; 
+  if(fCD == (fcdRequest + 0x80)){
+#ifndef QUIET_OUTPUT
+    printf("Error: Exception received %d \n", fCD);
+#endif   
+    return failure;
+  }
+  if(fBytes < 3 ){ /* At least 1B(uID) + 1B(fCode) + 1B(exception code) */
+#ifndef QUIET_OUTPUT
+    printf("Error: Data size to short %d \n", fBytes);
+#endif    
+    return failure;
+  }
+  if( (plSz < 1)||(plSz > _adu_size_)){
+#ifndef QUIET_OUTPUT
+    printf("Error: Payload size %d \n", plSz);
+#endif   
+    return failure;
+  }
+  return mbUpdateValue(ctx, ctx->dev.mbr);
+};
+
+/**
  * @brief  After a request is sended to slave this function get and process the reply
 **/
 int mbGetReply(mbCtx *ctx, _ln *mbr) {
@@ -301,112 +407,7 @@ int mbGetReply(mbCtx *ctx, _ln *mbr) {
   _mbReplyRaw(ctx);
   printf("Info: Reply time  : ~%.02f ms\n", replyDelay/10E2);
 #endif 
-  if( replySize < reply_exception ) { /* Unknown modbus reply */
-#ifndef QUIET_OUTPUT
-    puts("Error: Unknown modbus reply \n");
-    puts("Error: To short reply");
-#endif
-    return failure;
-  }
-  if( replySize == reply_exception ) { /* Exception received */
-#ifndef QUIET_OUTPUT
-    puts("Error: Exception received");  
-#endif
-    return failure;
-  }
-  if( replySize == reply_size_max ) { /* Requested data received*/
-    if(mbParseReply(ctx) == done){
-      /* Update lastValid for current modbus register */
-      uint8_t plSz = (uint8_t)ctx->dev.rxADU[_replySZ]; /* Reply payload size */ 
-      char *payload = (char*)calloc(plSz, _byte_size_);
-      for (uint8_t i = 0; i < 2; i++) {
-        payload[i] = ctx->dev.rxADU[ _replyData + i ];
-      }
-      uint8_t msb = (uint8_t)payload[0], lsb = (uint8_t)payload[1];
-      uint32_t value = STOL(msb, lsb);
-      long scale = strtol(mbrValue(mbr, scale) , NULL, 10);
-      char *floatValue = salloc(strlen("10000.00"));
-      sprintf(floatValue, "%5.02f", (float)value/scale);
-      updateValue(mbr, (char*)"lastValid", floatValue);      
-      free(payload);
-      free(floatValue);
-      return done;
-    }
-      
-  }
-#ifndef QUIET_OUTPUT
-  puts("Error: Unknown modbus reply");
-  puts("Error: Are you connected to a modbus config?\n");
-#endif 
-  return failure;
-};
-
-/**
- * @brief Print to stdout received ADU raw data
-**/
-int _mbReplyRaw(const mbCtx *ctx){
-  assert(ctx);
-  printf("Info: Modbus Reply: ");
-  for (size_t i = 0; i < _adu_size_; i++){
-    uint8_t data = (uint8_t)ctx->dev.rxADU[i];
-    printf("%02X", data); /* Hex value */
-  }
-  printf("\n");
-  return done;
-};
-
-/**
- * @brief When a correct modbus reply data size is received
- *        this function parse and save received data to ctx  
-**/
-int mbParseReply(mbCtx *ctx){
-  assert(ctx);
-  uint16_t tID, pID, fBytes;
-  uint8_t uID, fCD, plSz;
-  tID  = (uint16_t)STOL(ctx->dev.rxADU[ _tIDMsb ], ctx->dev.rxADU[ _tIDLsb ]); /* MBAP */
-  pID  = (uint16_t)STOL(ctx->dev.rxADU[ _pIDMsb ], ctx->dev.rxADU[ _pIDLsb ]); 
-  fBytes = (uint16_t)STOL(ctx->dev.rxADU[ _dSZMsb ], ctx->dev.rxADU[ _dSZMsb ]);
-  uID  = (uint8_t)ctx->dev.rxADU[_uID]; 
-  fCD  = (uint8_t)ctx->dev.rxADU[_replyFC]; /* PDU */ 
-  plSz = (uint8_t)ctx->dev.rxADU[_replySZ]; /* Reply payload size */ 
-  if(tID != ctx->adu.mbap._tID){  /* Transaction ID need to be the same for query/reply */
-#ifndef QUIET_OUTPUT
-    printf("Error: Transaction ID \n\n");
-#endif    
-    return failure;
-  }
-  if(pID != ctx->adu.mbap._pID){     /* Standard 0 = modbus tcp  */
-#ifndef QUIET_OUTPUT
-    printf("Error: pID \n\n");
-#endif    
-    return failure;
-  }
-  if(uID != ctx->dev.link.modbusRtu.unitAddress){ /* Unit ID is the modbus RTU (Serial comm.) address */
-#ifndef QUIET_OUTPUT
-    printf("Error: Unit ID \n\n");
-#endif    
-    return failure;
-  }
-  if(fBytes < 4 ){ /* At least 1B(uID) + 1B(fCode) + 1B(payload size) + 1B of payload */
-#ifndef QUIET_OUTPUT
-    printf("Error: Data size to short \n\n");
-#endif    
-    return failure;
-  }
-  uint8_t fcdRequest = ctx->adu.pdu.functionCode; 
-  if(fCD != fcdRequest){
-#ifndef QUIET_OUTPUT
-    printf("Error: Function code \n\n");
-#endif   
-    return failure;
-  }
-  if(plSz != 2){
-#ifndef QUIET_OUTPUT
-    printf("Error: Payload size \n\n");
-#endif   
-    return failure;
-  }
-  return done;
+  return mbParseReply(ctx, replySize);
 };
 
 /**

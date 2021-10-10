@@ -215,14 +215,14 @@ int mbInitMBAP(mbCtx *ctx);
  * @param  ctx Context with current register with data for PDU.
  * @return done
  */
-int mbInitPDU(mbCtx *ctx);
+int mbInitPDU(mbCtx *ctx, uint8_t fCode, uint16_t mbrAddress, uint16_t mbrSize);
 
 /**
  * @brief  Send request to a modbus device
  * @param  ctx Modbus device context 
  * @return done|failure
  */
-int mbSendRequest(mbCtx *ctx);
+int mbSendRequest(mbCtx *ctx, _ln *mbr);
 
 /**
  * @brief Print to stdout sendded ADU raw data
@@ -256,13 +256,22 @@ int mbGetReply(mbCtx *ctx, _ln *mbr);
 int _mbReplyRaw(const mbCtx *ctx);
 
 /**
+ * @brief Interpret and update lstValid for specific mbr
+ *
+ * @param  ctx Modbus device Context
+ * @param  mbr Modbus register to update value
+ * @return done|failure
+ */
+int mbUpdateValue(mbCtx *ctx, _ln *mbr);
+
+/**
  * @brief When a correct modbus reply data size is received
  *        this function parse and save received data to ctx  
  *
  * @param  ctx Modbus device Context
  * @return done|failure
  */
-int mbParseReply(mbCtx *ctx);
+int mbParseReply(mbCtx *ctx, uint8_t replySize);
 
 /**
  * @brief Save all modbus registers value 

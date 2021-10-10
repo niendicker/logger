@@ -109,6 +109,7 @@ void deviceMap(device *dev){
       if( ( fgets( _kv, sizeof(_kv), deviceMap ) == NULL ) ||
           ( IGNORE( _kv[0] ) ) ) { /*INVALID characters aren't allowed. Abort scanning... */
         printf("Error: Invalid modbus register data block: %s\n", _kv);
+        fclose(deviceMap);
         return;
       }
       char* token = strtok(_kv, "= ");
