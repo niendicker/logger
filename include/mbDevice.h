@@ -17,7 +17,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdint.h>
-#include "errorCtrl.h"
+#include "error.h"
 #include "linkedlist.h"
 
 #define \

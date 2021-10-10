@@ -2,21 +2,10 @@
 #register+++ is the open TAG for a register data block
 #space or comment after register block is the end tag
 
-# Template
-# MB_REGISTER_START
-# function = modbus function code
-# address  = register address
-# size     = register size
-# format   = US_08
-# signal   = 0
-# scale    = 256
-# unit     = V
-# meaning  = Generator_Volts
-# lastValid = 0.0
 
-#--------------------------------------
-# GENERATOR VALUES
-#--------------------------------------
+#------------------------------------------------------------------------------
+# GENERATOR ELECTRIC VALUES
+#------------------------------------------------------------------------------
 #Generator frequency
 MB_REGISTER_START
 function = 04
@@ -77,9 +66,110 @@ unit     = KVAr
 meaning  = Generator_Avg_Reactive_Power
 lastValid = 0.0
 
-#--------------------------------------
+
+#------------------------------------------------------------------------------
+# GENERATOR ENGINE VALUES
+#------------------------------------------------------------------------------
+#Engine speed
+MB_REGISTER_START
+function = 04
+address  = 00081
+size     = 1
+format   = US_00
+signal   = 0
+scale    = 1
+unit     = rpm
+meaning  = Engine_Speed
+lastValid = 0.0
+
+#Battery voltage
+MB_REGISTER_START
+function = 04
+address  = 00073
+size     = 1
+format   = US_08
+signal   = 0
+scale    = 256
+unit     = V
+meaning  = Battery_Voltage
+lastValid = 0.0
+
+#Coolant temperature
+MB_REGISTER_START
+function = 04
+address  = 00078
+size     = 2
+format   = SL_08
+signal   = 1
+scale    = 256
+unit     = C
+meaning  = Coolant_Temperature
+lastValid = 0.0
+
+#Oil pressure
+MB_REGISTER_START
+function = 04
+address  = 00077
+size     = 1
+format   = US_08
+signal   = 0
+scale    = 256
+unit     = bar
+meaning  = Oil_Pressure
+lastValid = 0.0
+
+#Working hours
+MB_REGISTER_START
+function = 04
+address  = 00071
+size     = 2
+format   = UL_00
+signal   = 0
+scale    = 1
+unit     = hh
+meaning  = Working_Hours
+lastValid = 0.0
+
+#Maintenance hours 1
+MB_REGISTER_START
+function = 04
+address  = 00721
+size     = 2
+format   = SL_00
+signal   = 1
+scale    = 1
+unit     = hh
+meaning  = Maintenance_Hours_1
+lastValid = 0.0
+
+#Maintenance hours 2
+MB_REGISTER_START
+function = 04
+address  = 00723
+size     = 2
+format   = SL_00
+signal   = 1
+scale    = 1
+unit     = hh
+meaning  = Maintenance_Hours_2
+lastValid = 0.0
+
+#Maintenance days
+MB_REGISTER_START
+function = 04
+address  = 00725
+size     = 2
+format   = SL_00
+signal   = 1
+scale    = 1
+unit     = dd
+meaning  = Maintenance_Days
+lastValid = 0.0
+
+
+#------------------------------------------------------------------------------
 # MAINS VALUES
-#--------------------------------------
+#------------------------------------------------------------------------------
 #Mains frequency
 MB_REGISTER_START
 function = 04

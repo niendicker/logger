@@ -94,6 +94,7 @@ int help(){
   puts("");
   for( int c; (c=fgetc(helpDoc)) != EOF; printf("%c", c) );
   puts("");
+  fclose(helpDoc);
   return done;
 }; /* help */
 

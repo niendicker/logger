@@ -35,11 +35,13 @@ typedef double float8_t;
 #define _mbpoll_schema_   ( _mbpoll_ )
 #define _mbpoll_table_    ( _mbpoll_ )
 #ifdef __arm__ /* arm-none-eabi-gcc compiler definition */
-  #define _mbpoll_auth_     ((char*)"PGPASSWORD='n13nd1ck3r'" )
+  //#define _mbpoll_auth_     ((char*)"PGPASSWORD='n13nd1ck3r'" )
+  #define _mbpoll_auth_     ((char*)"PGPASSFILE='/home/pi/run/bin/pgpass'" )
+  
   #define _mbpoll_dataDir_  ((char*)"/home/pi/run/bin/"           )
   #define _mbpoll_sqlDir_   ((char*)"/home/pi/run/bin/sql/"       )
 #else /* Using default for modbuspoll project */
-  #define _mbpoll_auth_     ((char*)"PGPASSFILE='/home/dev/dbms/00_rpi/bin/.pgpass'" )
+  #define _mbpoll_auth_     ((char*)"PGPASSFILE='/home/dev/dbms/00_rpi/bin/pgpass'" )
   #define _mbpoll_dataDir_  ((char*)"/home/dev/dbms/00_rpi/bin/" )
   #define _mbpoll_sqlDir_   ((char*)"/home/dev/dbms/00_rpi/bin/sql/" )
 #endif
@@ -48,7 +50,6 @@ typedef double float8_t;
 #define _sql_template_line_    ((uint)200)
 #define _csv_file_             ((char*)"mbpoll.csv")
 #define _csv_timestamp_header_ ((char*)"local_timestamp,") /* CSV default column */
-#define _csv_no_header_        ((char*)"FALSE")
 #define _csv_                  ((char*)"csv"  )
 #define _csv_std_delimiter_    (',')
 #define _csv_delimiter_size_   (sizeof(""))
@@ -82,7 +83,7 @@ typedef struct __sqlContext {
   _csvCtx inoutFile;
 } _sqlCtx;
 
-_sqlCtx *sqlCtxInit(_sqlCtx *sqlCtx, char* deviceID);
+_sqlCtx *sqlCtxInit(_sqlCtx *sqlCtx, _ln *deviceConfig);
 
 int sqlCtxFree(_sqlCtx *sqlCtx);
 
@@ -91,7 +92,7 @@ int sqlCtxFree(_sqlCtx *sqlCtx);
 **/
 char *timestampz();
 
-int persistData(char *deviceID, _ln *data);
+int persistData(_ln *data, _ln *deviceConfig);
 
 /**
  * @brief  Execute the sqlFile against postgres using psql interface

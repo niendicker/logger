@@ -3,20 +3,23 @@
 
 #define _cache_time ((double)10/10E2) /* Elapsed time(s) between export data do postgres  */
 
-_sqlCtx *sqlCtxInit(_sqlCtx *sqlCtx, char* deviceID){
-  assert(deviceID);
+_sqlCtx *sqlCtxInit(_sqlCtx *sqlCtx, _ln *deviceConfig){
+  assert(deviceConfig);
   sqlCtx = (_sqlCtx*)calloc(sizeof(_sqlCtx), _byte_size_);
   assert(sqlCtx);
   pid_t pid = getpid();
   sqlCtx->pid = salloc(str_digits(pid)); 
   sprintf(sqlCtx->pid, "%d", pid);
   assert(sqlCtx->pid);
-  sqlCtx->hostname = salloc_init(_pgsql_host_);
-  sqlCtx->port     = _pgsql_port_;
-  sqlCtx->auth     = salloc_init(_mbpoll_auth_);
-  sqlCtx->user     = salloc_init(_mbpoll_user_);
-  sqlCtx->database = salloc_init(_mbpoll_database_);
-  sqlCtx->schema   = salloc_init(_mbpoll_schema_);
+  sqlCtx->hostname = salloc_init(peekValue( deviceConfig, (char*)"pgsqlHost"));
+  sqlCtx->port     = (uint16_t)strtol(peekValue(deviceConfig, (char*)"pgsqlPort"), NULL, 10);
+  char *auth = salloc_init(peekValue(deviceConfig, (char*)"pgsqlAuth"));
+  sqlCtx->auth = salloc(strlen(auth));
+  sprintf(sqlCtx->auth, auth, '='); /* put '=' signal  */
+  sqlCtx->user     = salloc_init(peekValue( deviceConfig, (char*)"pgsqlUser"));
+  sqlCtx->database = salloc_init(peekValue( deviceConfig, (char*)"pgsqlDatabase"));
+  sqlCtx->schema   = salloc_init(_mbpoll_schema_); /* Schema is defined on sql template */
+  char *deviceID = salloc_init(peekValue(deviceConfig, (char*)"tag"));
   sqlCtx->table    = salloc(strlen(_mbpoll_table_) + _byte_size_ +strlen(deviceID));
   sprintf(sqlCtx->table, "%s_%s", deviceID, _mbpoll_table_); /* deviceID_modbuspoll */
   /* Template SQL script to be executed agaist postgres */
@@ -28,6 +31,8 @@ _sqlCtx *sqlCtxInit(_sqlCtx *sqlCtx, char* deviceID){
   sprintf(sqlCtx->inoutFile.fileName, "%s_%s", sqlCtx->pid, _csv_file_); /* 12345678_mbpoll.csv */
   sqlCtx->inoutFile.filePath = salloc(strlen(_mbpoll_dataDir_) + strlen(sqlCtx->inoutFile.fileName));
   sprintf(sqlCtx->inoutFile.filePath, "%s%s", _mbpoll_dataDir_, sqlCtx->inoutFile.fileName); 
+  free(deviceID);
+  free(auth);
   return (sqlCtx != NULL ? sqlCtx : NULL);
 };
 
@@ -74,6 +79,7 @@ int runSql(_sqlCtx *ctx){
     templateQuery = srealloc(templateQuery, templateNewSize);
     strcat(templateQuery, line);
   };
+  fclose(templateFile);
   char *csvFile = ctx->inoutFile.filePath; 
   assert(csvFile);
 
@@ -103,7 +109,7 @@ int runSql(_sqlCtx *ctx){
           /*Template*/ cmdTemplate, 
           /*Values  */ auth, psql, hostname, port, database, user, query);
   int s = system(cmd); /* run query */
-  
+
   free(cmd);
   free(database);
   free(port);
@@ -178,14 +184,14 @@ char *appendCsvData(_ln *deviceData, char *row){
   return (row != NULL ? row : NULL );
 };
 
-int persistData(char *deviceID, _ln *deviceData){
-  assert(deviceID && deviceData);
+int persistData(_ln *deviceData, _ln *deviceConfig){
+  assert(deviceData && deviceConfig);
   static double dTime = _start_;
   static char *dataBuffer;
   static _sqlCtx *sqlCtx;
   if(dTime == _start_){ /* Start bufferring device data */
     cpu_time(_start_);
-    sqlCtx = sqlCtxInit(sqlCtx, deviceID);
+    sqlCtx = sqlCtxInit(sqlCtx, deviceConfig);
     _ln *dataAvaliable = deviceData;
     char *csvHeader = insertCsvHeader(dataAvaliable);
     dataBuffer = salloc_init(csvHeader);
