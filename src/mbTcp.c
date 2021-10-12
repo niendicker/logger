@@ -59,7 +59,7 @@ int mbTcpConnect(mbCtx *ctx) {
     assert(hostname);
     ipAddress = srealloc_copy(ipAddress, htoip(hostname)); /* overwrite IP parameter for current instance */
   }
-  struct sockaddr_in mbServer; /* Set connection parameters */
+  struct sockaddr_in mbServer; /* Set connection parameters sendded */
   mbServer.sin_addr.s_addr = inet_addr(ipAddress);
   mbServer.sin_family = AF_INET;  
   mbServer.sin_port = htons(ctx->dev.link.modbusTcp.port);
