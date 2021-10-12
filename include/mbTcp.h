@@ -151,7 +151,7 @@ int mbTcpConnect(mbCtx *ctx);
  * @param  ctx Context with register map to update.
  * @return done|failure 
  */
-int mbUpdate(mbCtx *ctx);
+int mbUpdateAll(mbCtx *ctx);
 
 /**
  * @brief Close context link socket and set it to -1

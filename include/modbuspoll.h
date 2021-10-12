@@ -19,7 +19,7 @@
 #include "mbTcp.h"
 #include "postgresql.h"
 
-#define _min_poll_time_ ((int)100) //ms
+#define _min_poll_time_ ((int)50) //ms
 #define _max_devices_ ((int)10)
 
 enum argvIndex {

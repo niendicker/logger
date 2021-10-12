@@ -20,7 +20,7 @@ typedef float  float4_t;
 typedef double float8_t;
 #define _pgsql_varchar_    ((char*)"varchar"    )
 #define _pgsql_real_       ((char*)"real"       )
-#define _pgsql_timestampz_ ((char*)"timestampz" ) 
+#define _pgsql_timestamp_ ((char*)"timestamptz" ) 
 #define _timestampz_size   (sizeof("YYYY-MM-DD HH:MM:SS~TZ") )/* TZ = +/- XX Hours offset */
 /* Postgres connection */
 #define _pgsql_interface_ ((char*)"psql"     )
@@ -35,13 +35,9 @@ typedef double float8_t;
 #define _mbpoll_schema_   ( _mbpoll_ )
 #define _mbpoll_table_    ( _mbpoll_ )
 #ifdef __arm__ /* arm-none-eabi-gcc compiler definition */
-  //#define _mbpoll_auth_     ((char*)"PGPASSWORD='n13nd1ck3r'" )
-  #define _mbpoll_auth_     ((char*)"PGPASSFILE='/home/pi/run/bin/pgpass'" )
-  
   #define _mbpoll_dataDir_  ((char*)"/home/pi/run/bin/"           )
   #define _mbpoll_sqlDir_   ((char*)"/home/pi/run/bin/sql/"       )
 #else /* Using default for modbuspoll project */
-  #define _mbpoll_auth_     ((char*)"PGPASSFILE='/home/dev/dbms/00_rpi/bin/pgpass'" )
   #define _mbpoll_dataDir_  ((char*)"/home/dev/dbms/00_rpi/bin/" )
   #define _mbpoll_sqlDir_   ((char*)"/home/dev/dbms/00_rpi/bin/sql/" )
 #endif
@@ -83,26 +79,33 @@ typedef struct __sqlContext {
   _csvCtx inoutFile;
 } _sqlCtx;
 
-_sqlCtx *sqlCtxInit(_sqlCtx *sqlCtx, _ln *deviceConfig);
+_sqlCtx *sqlCtxInit(_sqlCtx *sqlCtx, _ln *deviceConfig, _ln *deviceData);
 
 int sqlCtxFree(_sqlCtx *sqlCtx);
+
+int sqlAddColumns(_sqlCtx *ctx,  _ln *deviceData);
+
+/**
+ * @brief  Create a new table if not exists.
+**/
+int sqlCreateTable(_sqlCtx *ctx);
 
 /**
  * @brief  Generate timestamp with time zone. 'YYYY-MM-DD HH:MM:SS~TZ'
 **/
 char *timestampz();
 
-int persistData(_ln *data, _ln *deviceConfig);
+_sqlCtx *persistData(_ln *data, _ln *deviceConfig);
 
 /**
  * @brief  Execute the sqlFile against postgres using psql interface
 **/
-int runSql(_sqlCtx *sqlCtx);
+int sqlImportCsv(_sqlCtx *sqlCtx);
 
 char *insertCsvHeader(_ln *deviceData);
 
 char *appendCsvData(_ln *deviceData, char *row);
 
-
+int runSql(_sqlCtx *ctx, char *query);
 
 #endif /* postgresql.h */

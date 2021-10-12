@@ -39,14 +39,14 @@ int main(int argc , char *argv[]) {
   free(pErrorMax);
   free(pCout);
   free(pInterval);
-  for (int poll = -1, eCount = 0;;) { /* until communication error is below the threshold received from argv[3] */
+  for (int poll = -1, commError = 0;;) { /* until communication error is below the threshold */
     poll += (pollCount > 0) ? 1 : 0; /* 0 means polling forever */
     if(poll < pollCount){
-      if (mbUpdate(mbDevice) == failure)
-        eCount += eThreshold > 0 ? 1 : 0;
+      if (mbUpdateAll(mbDevice) == failure)
+        commError += eThreshold > 0 ? 1 : 0;
       if(saveData(mbDevice) == -1){ /* Just notify and keep polling */
 #ifndef QUIET_OUTPUT
-      printf("\nError: Can't save data \n");
+        printf("\nError: Can't save data \n");
 #endif        
       }
     }
@@ -56,7 +56,7 @@ int main(int argc , char *argv[]) {
 #endif
       break;
     }
-    if (eCount >= (eThreshold+1)) {
+    if (commError >= (eThreshold+1)) {
 #ifndef QUIET_OUTPUT 
       printf("\nError: Polling terminated due to communication error limit\n");
 #endif
