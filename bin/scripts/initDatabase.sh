@@ -36,13 +36,3 @@ echo "#----------------------------------------------------------"
 echo "# GRANT ACCESS OF USER TO RELATION " 
 echo "#----------------------------------------------------------" 
 sudo -u $superuser psql -d $database -c "GRANT ALL PRIVILEGES ON DATABASE $database TO $user; "
-
-
-#CREATE DATABASE name
-#    [ [ WITH ] [ OWNER [=] user_name ]
-#           [ TEMPLATE [=] template ]
-#           [ ENCODING [=] encoding ]
-#           [ LC_COLLATE [=] lc_collate ]
-#           [ LC_CTYPE [=] lc_ctype ]
-#           [ TABLESPACE [=] tablespace_name ]
-#           [ CONNECTION LIMIT [=] connlimit ] ]
