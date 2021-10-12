@@ -77,7 +77,7 @@ enum mbrDataKeys{
 typedef struct __tcp{
   int32_t socket;
   uint16_t port;
-  uint8_t msTimeout; /* Maximum waiting time for any communication reply in ms */
+  uint16_t msTimeout; /* Maximum waiting time for any communication reply in ms */
   char *hostname;
   char *ipAddress;
 } _tcp;

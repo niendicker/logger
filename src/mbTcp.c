@@ -64,7 +64,7 @@ int mbTcpConnect(mbCtx *ctx) {
   mbServer.sin_family = AF_INET;  
   mbServer.sin_port = htons(ctx->dev.link.modbusTcp.port);
 #ifndef QUIET_OUTPUT
-  printf("Info: Connecting to %s @%s:%d \n", confValue(ctx->dev.config, tag), ipAddress, ctx->dev.link.modbusTcp.port);
+  printf("\nInfo: Connecting to %s @%s:%d \n", confValue(ctx->dev.config, tag), ipAddress, ctx->dev.link.modbusTcp.port);
 #endif
   struct timeval timeout;
   timeout.tv_sec  = 7;  // after 7 seconds connect() will timeout
@@ -86,18 +86,19 @@ int mbTcpConnect(mbCtx *ctx) {
 /**
  * @brief  Update context config modbus registers (MBR)
 **/
-int mbUpdate(mbCtx *ctx) {
+int mbUpdateAll(mbCtx *ctx) {
   assert(ctx && ctx->dev.mbr);
   uint8_t commFailure = 0;
   _ln *mbr = ctx->dev.mbr;
   while(mbr){ 
-    if ( mbSendRequest(ctx, mbr) == failure || mbGetReply(ctx, mbr) == failure ) { /* Dont call mbGetReply if mbSendRequest fails */
-      mbTcpReconnect(ctx);
+    if (mbSendRequest(ctx, mbr) == failure || mbGetReply(ctx, mbr) == failure ) { /* Dont call mbGetReply if mbSendRequest fails */
       commFailure++;
+      if(mbTcpReconnect(ctx) == failure)
+        return failure;
     }
     mbr = mbr->next;
   }
-  return( commFailure?( failure ):( done ) );
+  return commFailure ? failure : done;
 }; /* mbUpdate */
 
 /**
@@ -139,8 +140,7 @@ int mbClose(mbCtx *ctx){
 int mbTcpReconnect(mbCtx *ctx){
   assert(ctx);
   mbTcpDisconnect(ctx);
-  mbTcpConnect(ctx);
-  return done;
+  return mbTcpConnect(ctx);
 };
 
 /**
@@ -218,10 +218,6 @@ int mbInitMBAP(mbCtx *ctx) {
 **/
 int mbInitPDU(mbCtx *ctx, uint8_t fCode, uint16_t mbrAddress, uint16_t mbrSize) {
   assert(ctx && ctx->dev.mbr);
-  //_ln *mbr = ctx->dev.mbr;
-  //uint8_t fCode = (uint8_t)strtol(mbrValue(mbr, function) , NULL, 10);
-  //uint16_t mbrAddress = (uint16_t)strtol(mbrValue(mbr, address) , NULL, 10);
-  //uint16_t mbrSize = (uint16_t)strtol(mbrValue(mbr,   size) , NULL, 10);
   ctx->dev.txADU[ _fCode      ] = fCode;
   ctx->dev.txADU[ _mbrAddrLsb ] = (uint8_t)LTOS_LSB(mbrAddress);
   ctx->dev.txADU[ _mbrAddrMsb ] = (uint8_t)LTOS_MSB(mbrAddress);
@@ -246,9 +242,9 @@ int mbSendRequest(mbCtx *ctx, _ln *mbr){
 #ifndef QUIET_OUTPUT
   _mbRequestRaw(ctx);
 #endif 
-  if (send(ctx->dev.link.modbusTcp.socket, ctx->dev.txADU, _adu_size_, MSG_DONTWAIT) != _adu_size_) {
+  if (send(ctx->dev.link.modbusTcp.socket, ctx->dev.txADU, _adu_size_, MSG_WAITALL) != _adu_size_) {
 #ifndef QUIET_OUTPUT
-    puts("Error: Can't send data to config.");
+    puts("Error: Can't send data to device");
 #endif
     return failure;
   }
@@ -281,9 +277,7 @@ uint32_t waitReply(mbCtx *ctx){ /*//TODO Implement some tunning for wait */
   FD_ZERO(&fd); /* Reset file descriptor */
   FD_SET(ctx->dev.link.modbusTcp.socket, &fd);
   /* wait for data ready on file descriptor */
-  if( select(FD_SETSIZE, &fd, NULL, NULL, &wait) == failure){ 
-    return failure;
-  }
+  select(FD_SETSIZE, &fd, NULL, NULL, &wait);
   return(receiveTimeout - wait.tv_usec);
 };
 
@@ -327,7 +321,7 @@ int mbUpdateValue(mbCtx *ctx, _ln *mbr){
   else 
     value = (float4_t)(((uint16_t)raw_value)/scl);
   char *floatValue = salloc(strlen("10000.00"));
-  sprintf(floatValue, "%5.02f", value);
+  sprintf(floatValue, "%.02f", value);
   updateValue(mbr, (char*)"lastValid", floatValue);      
   free(payload);
   free(floatValue);
@@ -346,7 +340,7 @@ int mbParseReply(mbCtx *ctx, uint8_t replySize){
   uint8_t uID, fCD, plSz;
   tID  = (uint16_t)STOL(ctx->dev.rxADU[ _tIDMsb ], ctx->dev.rxADU[ _tIDLsb ]); /* MBAP */
   pID  = (uint16_t)STOL(ctx->dev.rxADU[ _pIDMsb ], ctx->dev.rxADU[ _pIDLsb ]); 
-  fBytes = (uint16_t)STOL(ctx->dev.rxADU[ _dSZMsb ], ctx->dev.rxADU[ _dSZMsb ]);
+  fBytes = (uint16_t)STOL(ctx->dev.rxADU[ _dSZMsb ], ctx->dev.rxADU[ _dSZLsb ]);
   uID  = (uint8_t)ctx->dev.rxADU[_uID]; 
   fCD  = (uint8_t)ctx->dev.rxADU[_replyFC]; /* PDU */ 
   plSz = (uint8_t)ctx->dev.rxADU[_replySZ]; /* Reply payload size */ 
@@ -396,7 +390,8 @@ int mbParseReply(mbCtx *ctx, uint8_t replySize){
 int mbGetReply(mbCtx *ctx, _ln *mbr) {
   assert(ctx && ctx->dev.link.modbusTcp.socket);
   int replyDelay = waitReply(ctx);
-  if(replyDelay == failure){
+  uint32_t timeout = ctx->dev.link.modbusTcp.msTimeout * 10E2;
+  if(replyDelay == timeout){
 #ifndef QUIET_OUTPUT
     puts("Error: Device reply timeout");
 #endif
