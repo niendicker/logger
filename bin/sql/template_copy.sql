@@ -1,1 +1,0 @@
-"COPY modbuspoll.%s FROM '%s' DELIMITER ',' CSV HEADER ;"

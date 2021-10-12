@@ -35,13 +35,9 @@ typedef double float8_t;
 #define _mbpoll_schema_   ( _mbpoll_ )
 #define _mbpoll_table_    ( _mbpoll_ )
 #ifdef __arm__ /* arm-none-eabi-gcc compiler definition */
-  //#define _mbpoll_auth_     ((char*)"PGPASSWORD='n13nd1ck3r'" )
-  #define _mbpoll_auth_     ((char*)"PGPASSFILE='/home/pi/run/bin/pgpass'" )
-  
   #define _mbpoll_dataDir_  ((char*)"/home/pi/run/bin/"           )
   #define _mbpoll_sqlDir_   ((char*)"/home/pi/run/bin/sql/"       )
 #else /* Using default for modbuspoll project */
-  #define _mbpoll_auth_     ((char*)"PGPASSFILE='/home/dev/dbms/00_rpi/bin/pgpass'" )
   #define _mbpoll_dataDir_  ((char*)"/home/dev/dbms/00_rpi/bin/" )
   #define _mbpoll_sqlDir_   ((char*)"/home/dev/dbms/00_rpi/bin/sql/" )
 #endif
