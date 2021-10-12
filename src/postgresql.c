@@ -3,7 +3,7 @@
 
 #define _cache_time ((double)10/10E2) /* Elapsed time(s) between export data do postgres  */
 
-_sqlCtx *sqlCtxInit(_sqlCtx *sqlCtx, _ln *deviceConfig){
+_sqlCtx *sqlCtxInit(_sqlCtx *sqlCtx, _ln *deviceConfig, _ln *deviceData){
   assert(deviceConfig);
   sqlCtx = (_sqlCtx*)calloc(sizeof(_sqlCtx), _byte_size_);
   assert(sqlCtx);
@@ -23,8 +23,7 @@ _sqlCtx *sqlCtxInit(_sqlCtx *sqlCtx, _ln *deviceConfig){
   sqlCtx->table    = salloc(strlen(_mbpoll_table_) + _byte_size_ +strlen(deviceID));
   sprintf(sqlCtx->table, "%s_%s", deviceID, _mbpoll_table_); /* deviceID_modbuspoll */
   /* Template SQL script to be executed agaist postgres */
-  sqlCtx->sqlTemplate = (char*)salloc(strlen(_sql_template_copy_) + strlen(_mbpoll_sqlDir_));
-  sprintf(sqlCtx->sqlTemplate, "%s%s", _mbpoll_sqlDir_, _sql_template_copy_);
+  sqlCtx->sqlTemplate = salloc_init(_mbpoll_sqlDir_);
   /* File used to export data */
   sqlCtx->inoutFile.persist_dt = _cache_time;
   sqlCtx->inoutFile.fileName = salloc(strlen(sqlCtx->pid) + _byte_size_ + strlen(_csv_file_));
@@ -33,7 +32,13 @@ _sqlCtx *sqlCtxInit(_sqlCtx *sqlCtx, _ln *deviceConfig){
   sprintf(sqlCtx->inoutFile.filePath, "%s%s", _mbpoll_dataDir_, sqlCtx->inoutFile.fileName); 
   free(deviceID);
   free(auth);
-  return (sqlCtx != NULL ? sqlCtx : NULL);
+  static int once = false;
+  if(once)
+    return sqlCtx;
+  once = true; /* At first sistem run try to create devices table */
+  if(sqlCreateTable(sqlCtx) == 0)
+    sqlAddColumns(sqlCtx, deviceData);
+  return sqlCtx;
 };
 
 int sqlCtxFree(_sqlCtx *sqlCtx){
@@ -65,60 +70,88 @@ char *timestampz(){
   return (tsz != NULL ? tsz : NULL);
 };
 
-/**
- * @brief  Load, parse and Execute the sqlTemplate file against postgres using psql interface
-**/
-int runSql(_sqlCtx *ctx){
-  assert(ctx);
-  FILE *templateFile = fopen(ctx->sqlTemplate, "r");
-  assert(templateFile);
-  char *templateQuery = salloc(_sql_template_line_); /* Initialize vector */
-  char *line = salloc(_sql_template_line_);
-  while( fgets(line, _sql_template_line_, templateFile) ){ /* Load sql template file */
-    int templateNewSize = strlen(templateQuery) + strlen(line);
-    templateQuery = srealloc(templateQuery, templateNewSize);
-    strcat(templateQuery, line);
-  };
-  fclose(templateFile);
-  char *csvFile = ctx->inoutFile.filePath; 
-  assert(csvFile);
-
-  uint querySize = strlen(templateQuery) + strlen(ctx->table) + strlen(csvFile);
-  int tagSize = 2; 
-  querySize -= tagSize * 2; /* The 2 tags %s will be substituted by values TODO: */
-  char *query = salloc(querySize);
-  sprintf(query, templateQuery, ctx->table, csvFile); /* Set table/file for COPY query */
-  char *auth = salloc_init(ctx->auth);
+int runSql(_sqlCtx *ctx, char *query){
+  assert(ctx && query);
 #ifndef QUIET_OUTPUT  
   char *psql = (char*)"psql";
 #else 
   char *psql = (char*)"psql -q";  /* Be quiet */
 #endif
-  char *user = salloc_init(ctx->user);
-  char *hostname = salloc_init(ctx->hostname);
   char *port = salloc(str_digits(ctx->port));
   sprintf(port, "%d", ctx->port);
-  char *database = salloc_init(ctx->database);
-  char *cmdTemplate = (char*)"%s %s --single-transaction --host=%s --port=%s --dbname=%s --username=%s --command=%s ";
-  uint cmdSize = strlen(auth) + strlen(psql) + strlen(hostname) + 
-                 strlen(port) + strlen(database) + strlen(user) + 
-                 strlen(query) + strlen(cmdTemplate);
-  cmdSize -= tagSize * 7; /* sprintf remove tags */
+  char cmdTemplate[] =  "%s %s --single-transaction --host=%s --port=%s --dbname=%s --username=%s --command=\"%s\"";
+  uint cmdSize = strlen(ctx->auth) + strlen(psql)          + strlen(ctx->hostname) + 
+                 strlen(port)      + strlen(ctx->database) + strlen(ctx->user) + 
+                 strlen(query)     + sizeof(cmdTemplate);
   char *cmd = (char*)salloc(cmdSize);
-  sprintf(/*Output  */ cmd, 
-          /*Template*/ cmdTemplate, 
-          /*Values  */ auth, psql, hostname, port, database, user, query);
+  sprintf( /*Output  */ cmd, /*Template*/ cmdTemplate, 
+           /*Context */ ctx->auth, psql, ctx->hostname, port, ctx->database, ctx->user, 
+        /* sql query */ query);
   int s = system(cmd); /* run query */
-
   free(cmd);
-  free(database);
   free(port);
-  free(hostname);
-  free(user);
-  free(auth);
+  return s;
+}
+
+/**
+ * @brief  Add column to devices table
+**/
+int sqlAddColumns(_sqlCtx *ctx, _ln *deviceData){
+  assert(ctx && deviceData) ;
+  char templateQuery[] = "ALTER TABLE modbuspoll.%s ADD if not exists %s %s NOT NULL;";
+  char *query = salloc_init(templateQuery);
+  char *columnID = salloc_init((char*)"local_timestamp" ); /*  Add timestamp*/
+  char *dataType = salloc_init((char*)_pgsql_timestamp_);
+  uint querySize = sizeof(templateQuery) + strlen(ctx->table) + strlen(columnID) + strlen(dataType);
+  query = srealloc(query, querySize);
+  sprintf(query, templateQuery, ctx->table, columnID, dataType);
+  if(runSql(ctx, query) != 0 )
+    return -1;
+  _ln *data = deviceData;
+  while(data){  /* Add others columns */
+    columnID = srealloc_copy(columnID, data->data->key);
+    dataType = srealloc_copy(dataType, _pgsql_real_);
+    querySize = sizeof(templateQuery) + strlen(ctx->table) + strlen(columnID) + strlen(dataType);
+    query = srealloc(query, querySize);
+    sprintf(query, templateQuery, ctx->table, columnID, dataType);
+    if(runSql(ctx, query) != 0 )
+      break;
+    data = data->next;  
+  } 
+  free(dataType);
+  free(columnID);
   free(query);
-  free(line);
-  free(templateQuery);
+  return 0;
+};
+
+/**
+ * @brief  Create a new table if not exists.
+**/
+int sqlCreateTable(_sqlCtx *ctx){
+  assert(ctx) ;
+  char *tableID = ctx->table;
+  char templateQuery[] = "create table if not exists modbuspoll.%s ();";
+  uint querySize = sizeof(templateQuery) + strlen(tableID);
+  char *query = salloc(querySize);
+  sprintf(query, templateQuery, tableID);
+  int s = runSql(ctx, query);
+  free(query);
+  return s;
+};
+
+/**
+ * @brief  Load, parse and Execute the sqlTemplate file against postgres using psql interface
+**/
+int sqlImportCsv(_sqlCtx *ctx){
+  assert(ctx);
+  char templateQuery[] = "COPY modbuspoll.%s FROM '%s' DELIMITER ',' CSV HEADER;";
+  char *csvFile = ctx->inoutFile.filePath; /* Per process filename */
+  assert(csvFile);
+  uint querySize = sizeof(templateQuery) + strlen(ctx->table) + strlen(csvFile);
+  char *query = salloc(querySize);
+  sprintf(query, templateQuery, ctx->table, csvFile); /* Set table/file for COPY query */
+  int s = runSql(ctx, query);
+  free(query);
   return s;
 };
 
@@ -129,8 +162,7 @@ char *insertCsvHeader(_ln *deviceData){
     char *columnID = salloc_init(data->data->key);
     while(data){ 
       char colDelimiter = ( data->next == NULL ) ? '\n' : _csv_std_delimiter_; /* Last row data? */
-      columnID = srealloc(columnID, strlen(data->data->key));
-      strcpy(columnID, data->data->key);
+      columnID = srealloc_copy(columnID, data->data->key);
       csvColumn = srealloc( csvColumn, strlen(columnID) + _csv_delimiter_size_);
       sprintf(csvColumn, "%s%c", columnID, colDelimiter);
       int headerNewSize = strlen(csvHeader) + strlen(csvColumn);
@@ -184,14 +216,14 @@ char *appendCsvData(_ln *deviceData, char *row){
   return (row != NULL ? row : NULL );
 };
 
-int persistData(_ln *deviceData, _ln *deviceConfig){
+_sqlCtx *persistData(_ln *deviceData, _ln *deviceConfig){
   assert(deviceData && deviceConfig);
   static double dTime = _start_;
   static char *dataBuffer;
   static _sqlCtx *sqlCtx;
   if(dTime == _start_){ /* Start bufferring device data */
     cpu_time(_start_);
-    sqlCtx = sqlCtxInit(sqlCtx, deviceConfig);
+    sqlCtx = sqlCtxInit(sqlCtx, deviceConfig, deviceData);
     _ln *dataAvaliable = deviceData;
     char *csvHeader = insertCsvHeader(dataAvaliable);
     dataBuffer = salloc_init(csvHeader);
@@ -201,22 +233,22 @@ int persistData(_ln *deviceData, _ln *deviceConfig){
   if( dTime > sqlCtx->inoutFile.persist_dt ) { /* Dump/Store buffered device data */
     FILE *outputFile = fopen(sqlCtx->inoutFile.fileName, "w+");
     if(outputFile == NULL)
-      return -1;
+      return NULL;
     int outFileWritten = fprintf(outputFile, "%s", dataBuffer); 
     fclose(outputFile);
     if (outFileWritten){
-      runSql(sqlCtx);  /* import dumped data to postgres using psql */
+      sqlImportCsv(sqlCtx);  /* import dumped data to postgres using psql */
 #ifndef QUIET_OUTPUT
       printf("Info: Buffered data saved\n");
 #endif
     } 
-    remove(sqlCtx->inoutFile.fileName);
+    remove(sqlCtx->inoutFile.fileName); 
     sqlCtxFree(sqlCtx);
     free(dataBuffer);
     dTime = cpu_time(_start_);
-    return 0;
+    return sqlCtx;
   }  /* Dump/Store buffered device data */
   dataBuffer = appendCsvData(deviceData, dataBuffer);
   assert(dataBuffer);
-  return 0;
+  return sqlCtx;
 };

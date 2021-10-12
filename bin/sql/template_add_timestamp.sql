@@ -1,0 +1,1 @@
+"ALTER TABLE modbuspoll.%s ADD local_timestamp timestamptz NOT NULL;"

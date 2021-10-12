@@ -466,7 +466,7 @@ int saveData(mbCtx *_mbCtx){
   assert(mbr);
   _ln *deviceData = pushDeviceData(deviceID, mbr);
   for(int i=0; i < 5; i++){ /*  */
-    if(persistData(deviceData, _mbCtx->dev.config) == 0){
+    if(persistData(deviceData, _mbCtx->dev.config) != NULL){
       dropDeviceData(deviceData);
       return 0;
     }

@@ -20,7 +20,7 @@ typedef float  float4_t;
 typedef double float8_t;
 #define _pgsql_varchar_    ((char*)"varchar"    )
 #define _pgsql_real_       ((char*)"real"       )
-#define _pgsql_timestampz_ ((char*)"timestampz" ) 
+#define _pgsql_timestamp_ ((char*)"timestamptz" ) 
 #define _timestampz_size   (sizeof("YYYY-MM-DD HH:MM:SS~TZ") )/* TZ = +/- XX Hours offset */
 /* Postgres connection */
 #define _pgsql_interface_ ((char*)"psql"     )
@@ -83,26 +83,33 @@ typedef struct __sqlContext {
   _csvCtx inoutFile;
 } _sqlCtx;
 
-_sqlCtx *sqlCtxInit(_sqlCtx *sqlCtx, _ln *deviceConfig);
+_sqlCtx *sqlCtxInit(_sqlCtx *sqlCtx, _ln *deviceConfig, _ln *deviceData);
 
 int sqlCtxFree(_sqlCtx *sqlCtx);
+
+int sqlAddColumns(_sqlCtx *ctx,  _ln *deviceData);
+
+/**
+ * @brief  Create a new table if not exists.
+**/
+int sqlCreateTable(_sqlCtx *ctx);
 
 /**
  * @brief  Generate timestamp with time zone. 'YYYY-MM-DD HH:MM:SS~TZ'
 **/
 char *timestampz();
 
-int persistData(_ln *data, _ln *deviceConfig);
+_sqlCtx *persistData(_ln *data, _ln *deviceConfig);
 
 /**
  * @brief  Execute the sqlFile against postgres using psql interface
 **/
-int runSql(_sqlCtx *sqlCtx);
+int sqlImportCsv(_sqlCtx *sqlCtx);
 
 char *insertCsvHeader(_ln *deviceData);
 
 char *appendCsvData(_ln *deviceData, char *row);
 
-
+int runSql(_sqlCtx *ctx, char *query);
 
 #endif /* postgresql.h */

@@ -28,7 +28,11 @@
         "postgresql.h": "c",
         "stat.h": "c",
         "resources.h": "c",
-        "modbuspoll.h": "c"
+        "modbuspoll.h": "c",
+        "*.def": "c",
+        "linkedlist.h": "c",
+        "assert.h": "c",
+        "time.h": "c"
       },
       "editor.stickyTabStops": true
    }

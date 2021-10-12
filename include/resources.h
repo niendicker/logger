@@ -84,5 +84,4 @@ double cpu_time(_timer command);
 
 char **getConfigs(char *configDir, char *fileExtension);
 
-
 #endif /* resources.h */
