@@ -32,7 +32,7 @@ mbCtx *mbInit(const char *mbDevConfigFile) {
   newDev->adu.mbap._fBytes = 0;
   newDev->dev.link.modbusTcp.socket = failure;
   newDev->dev.txADU = salloc(_adu_size_);
-  newDev->dev.rxADU = salloc(_adu_size_);
+  newDev->dev.rxADU = salloc(_adu_reply_max_size_);
 #ifndef QUIET_OUTPUT
   mbShowConf(newDev);    
   mbShowRegistersMap(newDev);
@@ -241,7 +241,8 @@ int mbSendRequest(mbCtx *ctx, _ln *mbr){
   mbInitPDU(ctx, fCode, mbrAddress, mbrSize);
 #ifndef QUIET_OUTPUT
   _mbRequestRaw(ctx);
-#endif 
+#endif
+  while(recv(ctx->dev.link.modbusTcp.socket, NULL, 1, MSG_DONTWAIT)!=(-1)); /*Clear socket buffer*/
   if (send(ctx->dev.link.modbusTcp.socket, ctx->dev.txADU, _adu_size_, MSG_WAITALL) != _adu_size_) {
 #ifndef QUIET_OUTPUT
     puts("Error: Can't send data to device");
@@ -287,7 +288,7 @@ uint32_t waitReply(mbCtx *ctx){ /*//TODO Implement some tunning for wait */
 int _mbReplyRaw(const mbCtx *ctx){
   assert(ctx);
   printf("Info: Modbus Reply: ");
-  for (size_t i = 0; i < _adu_size_; i++){
+  for (size_t i = 0; i < _adu_reply_max_size_; i++){
     uint8_t data = (uint8_t)ctx->dev.rxADU[i];
     printf("%02X", data); /* Hex value */
   }
@@ -337,13 +338,13 @@ int mbParseReply(mbCtx *ctx, uint8_t replySize){
   if(replySize < reply_size_min)
     return failure;
   uint16_t tID, pID, fBytes;
-  uint8_t uID, fCD, plSz;
+  uint8_t uID, fCD, plBytes;
   tID  = (uint16_t)STOL(ctx->dev.rxADU[ _tIDMsb ], ctx->dev.rxADU[ _tIDLsb ]); /* MBAP */
   pID  = (uint16_t)STOL(ctx->dev.rxADU[ _pIDMsb ], ctx->dev.rxADU[ _pIDLsb ]); 
   fBytes = (uint16_t)STOL(ctx->dev.rxADU[ _dSZMsb ], ctx->dev.rxADU[ _dSZLsb ]);
   uID  = (uint8_t)ctx->dev.rxADU[_uID]; 
   fCD  = (uint8_t)ctx->dev.rxADU[_replyFC]; /* PDU */ 
-  plSz = (uint8_t)ctx->dev.rxADU[_replySZ]; /* Reply payload size */ 
+  plBytes = (uint8_t)ctx->dev.rxADU[_replySZ]; /* Reply payload size */ 
   if(tID != ctx->adu.mbap._tID){  /* Transaction ID need to be the same for query/reply */
 #ifndef QUIET_OUTPUT
     printf("Error: Transaction ID %d \n", tID);
@@ -375,9 +376,9 @@ int mbParseReply(mbCtx *ctx, uint8_t replySize){
 #endif    
     return failure;
   }
-  if( (plSz < 1)||(plSz > _adu_size_)){
+  if( (plBytes < 2)||(plBytes > 4)){
 #ifndef QUIET_OUTPUT
-    printf("Error: Payload size %d \n", plSz);
+    printf("Error: Payload size %d \n", plBytes);
 #endif   
     return failure;
   }

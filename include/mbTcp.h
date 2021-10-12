@@ -88,8 +88,9 @@ enum requestPDUi { /* PDU data index from ADU[sizeof(MBAP)]*/
 
 enum replyPDUi { /* Reply PDU data index */
   _replyFC = (_mbap_size_),
-  _replySZ, /* payload bytes */
-  _replyData /* payload start data*/
+  _replySZ, /* following bytes */
+  _replyData, /* payload start data*/
+  _adu_reply_max_size_ = (_adu_size_ + 1) /*  */
 };
 
 enum _aduBytes { /* From Modbus specification */
@@ -99,7 +100,7 @@ enum _aduBytes { /* From Modbus specification */
   payload_size_max = ( (adu_size_max) - (mbap_size) - (_fCode) ),
   reply_exception = 2,
   reply_size_min = ( (_mbap_size_) + (reply_exception) ),
-  reply_size_max = (_adu_size_)
+  reply_size_max = (_adu_reply_max_size_)
 };
 
 typedef struct { /* MODBUS APPLICATION PROTOCOL HEADER - MBAP  */
