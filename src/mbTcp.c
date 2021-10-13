@@ -242,7 +242,9 @@ int mbSendRequest(mbCtx *ctx, _ln *mbr){
 #ifndef QUIET_OUTPUT
   _mbRequestRaw(ctx);
 #endif
-  while(recv(ctx->dev.link.modbusTcp.socket, NULL, 1, MSG_DONTWAIT)!=(-1)); /*Clear socket buffer*/
+  char *tmp = salloc(_byte_size_);
+  while(recv(ctx->dev.link.modbusTcp.socket, tmp, 1, MSG_DONTWAIT)!=(-1)); /*Clear socket buffer*/
+  free(tmp);
   if (send(ctx->dev.link.modbusTcp.socket, ctx->dev.txADU, _adu_size_, MSG_WAITALL) != _adu_size_) {
 #ifndef QUIET_OUTPUT
     puts("Error: Can't send data to device");
@@ -300,9 +302,9 @@ int _mbReplyRaw(const mbCtx *ctx){
  * @brief Interpret and update lstValid for specific mbr
  */
 int mbUpdateValue(mbCtx *ctx, _ln *mbr){
-  uint8_t plSz = (uint8_t)ctx->dev.rxADU[_replySZ]; /* Reply payload size */ 
-  char *payload = (char*)calloc(plSz, _byte_size_);
-  for (uint8_t i = 0; i < plSz; i++) {
+  uint8_t plBytes = (uint8_t)ctx->dev.rxADU[_reply_plBytes]; /* Reply payload size */ 
+  char *payload = (char*)calloc(plBytes, _byte_size_);
+  for (uint8_t i = 0; i < plBytes; i++) {
     payload[i] = ctx->dev.rxADU[ _replyData + i ];
   }
   uint8_t fCode    = strtol(mbrValue(mbr, function), NULL, 10);
@@ -311,10 +313,14 @@ int mbUpdateValue(mbCtx *ctx, _ln *mbr){
   float value = 0.0;
   if( fCode >= readHoldingRegisters ){ /* WORD SIZE(16bits) VALUES */
     int8_t msb = (int8_t)payload[0], lsb = (int8_t)payload[1];
-    raw_value = STOL(msb, lsb);
+    uint32_t rawValueMsb = STOL(msb, lsb);
+    msb = (int8_t)payload[2], lsb = (int8_t)payload[3];
+    uint32_t rawValueLsb = STOL(msb, lsb);
+    raw_value = (rawValueMsb << 16) | rawValueLsb;
   }
   else{ /* 8bits value */
-    raw_value = payload[0];
+    int8_t msb = (int8_t)payload[0], lsb = (int8_t)payload[1];
+    raw_value = STOL(msb, lsb);
   }
   int16_t scl = strtol(mbrValue(mbr, scale   ), NULL, 10);
   if(isSigned) 
@@ -335,8 +341,12 @@ int mbUpdateValue(mbCtx *ctx, _ln *mbr){
 **/
 int mbParseReply(mbCtx *ctx, uint8_t replySize){
   assert(ctx);
-  if(replySize < reply_size_min)
+  if(replySize < reply_size_min){
+#ifndef QUIET_OUTPUT
+    printf("Error: Reply size too short %d", replySize);
+#endif  
     return failure;
+  }
   uint16_t tID, pID, fBytes;
   uint8_t uID, fCD, plBytes;
   tID  = (uint16_t)STOL(ctx->dev.rxADU[ _tIDMsb ], ctx->dev.rxADU[ _tIDLsb ]); /* MBAP */
@@ -344,7 +354,7 @@ int mbParseReply(mbCtx *ctx, uint8_t replySize){
   fBytes = (uint16_t)STOL(ctx->dev.rxADU[ _dSZMsb ], ctx->dev.rxADU[ _dSZLsb ]);
   uID  = (uint8_t)ctx->dev.rxADU[_uID]; 
   fCD  = (uint8_t)ctx->dev.rxADU[_replyFC]; /* PDU */ 
-  plBytes = (uint8_t)ctx->dev.rxADU[_replySZ]; /* Reply payload size */ 
+  plBytes = (uint8_t)ctx->dev.rxADU[_reply_plBytes]; /* Reply payload size */ 
   if(tID != ctx->adu.mbap._tID){  /* Transaction ID need to be the same for query/reply */
 #ifndef QUIET_OUTPUT
     printf("Error: Transaction ID %d \n", tID);

@@ -44,21 +44,21 @@ int main(int argc , char *argv[]) {
     if(poll < pollCount){
       if (mbUpdateAll(mbDevice) == failure)
         commError += eThreshold > 0 ? 1 : 0;
-      if(saveData(mbDevice) == -1){ /* Just notify and keep polling */
+      else if(saveData(mbDevice) == -1){ /* Just notify and keep polling */
 #ifndef QUIET_OUTPUT
         printf("\nError: Can't save data \n");
 #endif        
       }
+      if ((commError >= eThreshold) && (eThreshold != 0)) {
+#ifndef QUIET_OUTPUT 
+        printf("\nError: Polling terminated due to communication error limit\n");
+#endif
+        break;
+      }
     }
     else {
 #ifndef QUIET_OUTPUT
-      printf("\nInfo: Polling terminated due to argument polling count\n");
-#endif
-      break;
-    }
-    if (commError >= (eThreshold+1)) {
-#ifndef QUIET_OUTPUT 
-      printf("\nError: Polling terminated due to communication error limit\n");
+      printf("\nInfo: Polling done. Thanks!\n");
 #endif
       break;
     }

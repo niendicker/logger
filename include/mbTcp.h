@@ -88,7 +88,7 @@ enum requestPDUi { /* PDU data index from ADU[sizeof(MBAP)]*/
 
 enum replyPDUi { /* Reply PDU data index */
   _replyFC = (_mbap_size_),
-  _replySZ, /* following bytes */
+  _reply_plBytes, /* following payload bytes */
   _replyData, /* payload start data*/
   _adu_reply_max_size_ = (_adu_size_ + 1) /*  */
 };
