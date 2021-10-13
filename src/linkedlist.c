@@ -53,9 +53,9 @@ char *peekValue(_ln *listNode, char *key){
  * @brief  Update the value of a given key
  * @return _mbrTupleNode|NULL
  */
-char *updateValue(_ln *listNode, char *key, char* value){
-  assert(listNode->data && key && value);
-  uint64_t hash = djb2_hash(key);
+char *updateValue(_ln *listNode, char* value){
+  assert(listNode->data && value);
+  uint64_t hash = djb2_hash((char*)"lastValid");
   _dn *data = listNode->data;
   while( data ){
     if( hash == data->keyHash ) {       

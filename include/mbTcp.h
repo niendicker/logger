@@ -31,6 +31,7 @@
 
 #define _mbpoll_std_ip_ ((char*)"MOD.BUS.POL.L:)")
 #define _mbpoll_max_dev_ ((int)10)
+#define _mbpoll_max_value_ ((char*)"100000.00") /* Max float parsed value */
 
 enum polling{
   min_timeout_ms=100
@@ -66,7 +67,8 @@ enum mbExceptionCode{
                                           |   when attempting to read extended memory.     */
   gatewayPathUnavailable,   /* 10 (0x0A)  | The gateway is overloaded or not correctly 
                                           |   configured.                                  */
-  gatewayNotFound           /* 11 (0x0B)  | The slave is not present on the network.       */
+  gatewayNotFound,          /* 11 (0x0B)  | The slave is not present on the network.       */
+  exceptionOffset = 0x80    /* Modbus reply exception = fcode + 0x80 */
 };
 
 enum MBAPi { /* MBAP Data Index from ADU[0] for [tx/rxVector] */

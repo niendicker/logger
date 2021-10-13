@@ -311,26 +311,32 @@ int mbUpdateValue(mbCtx *ctx, _ln *mbr){
   uint8_t isSigned = strtol(mbrValue(mbr, signal  ), NULL, 10);
   int32_t raw_value = (int8_t)payload[0];
   float value = 0.0;
-  if( fCode >= readHoldingRegisters ){ /* WORD SIZE(16bits) VALUES */
+  if( fCode >= readHoldingRegisters ){ /* DOUBLE WORD SIZE 32bits*/
     int8_t msb = (int8_t)payload[0], lsb = (int8_t)payload[1];
-    uint32_t rawValueMsb = STOL(msb, lsb);
+    uint32_t rawValueMsb = STOL(msb, lsb); 
     msb = (int8_t)payload[2], lsb = (int8_t)payload[3];
     uint32_t rawValueLsb = STOL(msb, lsb);
     raw_value = (rawValueMsb << 16) | rawValueLsb;
   }
-  else{ /* 8bits value */
+  else{ /* WORD SIZE 16bits */
     int8_t msb = (int8_t)payload[0], lsb = (int8_t)payload[1];
     raw_value = STOL(msb, lsb);
   }
-  int16_t scl = strtol(mbrValue(mbr, scale   ), NULL, 10);
-  if(isSigned) 
-    value = (float4_t)raw_value/scale;
-  else 
-    value = (float4_t)(((uint16_t)raw_value)/scl);
-  char *floatValue = salloc(strlen("10000.00"));
-  sprintf(floatValue, "%.02f", value);
-  updateValue(mbr, (char*)"lastValid", floatValue);      
   free(payload);
+  uint16_t _scale_ = (uint16_t)strtol(mbrValue(mbr, scale), NULL, 10);
+  if(isSigned) 
+    value = (float4_t)raw_value/(int16_t)_scale_;
+  else 
+    value = (float4_t)(((uint32_t)raw_value)/_scale_);
+  if(value > strtold(_mbpoll_max_value_, NULL)){
+#ifndef QUIET_OUTPUT
+    printf("Error: Value to high %.02f", value);
+#endif   
+    return failure;
+  }
+  char *floatValue = salloc(strlen(_mbpoll_max_value_));
+  sprintf(floatValue, "%06.02f", value);
+  updateValue(mbr, floatValue);      
   free(floatValue);
   return done;
 };
@@ -374,7 +380,7 @@ int mbParseReply(mbCtx *ctx, uint8_t replySize){
     return failure;
   }
   uint8_t fcdRequest = ctx->adu.pdu.functionCode; 
-  if(fCD == (fcdRequest + 0x80)){
+  if(fCD == (fcdRequest + exceptionOffset)){
 #ifndef QUIET_OUTPUT
     printf("Error: Exception received %d \n", fCD);
 #endif   
