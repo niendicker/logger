@@ -15,7 +15,7 @@
 
 #define LTOS_LSB(LONG) (LONG & 0xFF)
 #define LTOS_MSB(LONG) ((LONG >> 8) & 0xFF)
-#define STOL(S_MSB, S_LSB) ( (int16_t)(S_MSB << 8) + S_LSB )
+#define STOL(S_MSB, S_LSB) ( (int16_t)(S_MSB << 8) | S_LSB )
 
 /**
  * @brief Load context config parameters from filePath file
@@ -237,7 +237,7 @@ int mbSendRequest(mbCtx *ctx, _ln *mbr){
   mbInitMBAP(ctx); /* copy data from internal structure to txVector */
   uint8_t fCode = (uint8_t)strtol(mbrValue(mbr, function) , NULL, 10);
   uint16_t mbrAddress = (uint16_t)strtol(mbrValue(mbr, address) , NULL, 10);
-  uint16_t mbrSize = (uint16_t)strtol(mbrValue(mbr,   size) , NULL, 10);
+  uint16_t mbrSize = (uint16_t)strtol(mbrValue(mbr, size) , NULL, 10);
   mbInitPDU(ctx, fCode, mbrAddress, mbrSize);
 #ifndef QUIET_OUTPUT
   _mbRequestRaw(ctx);
@@ -303,31 +303,40 @@ int _mbReplyRaw(const mbCtx *ctx){
  */
 int mbUpdateValue(mbCtx *ctx, _ln *mbr){
   uint8_t plBytes = (uint8_t)ctx->dev.rxADU[_reply_plBytes]; /* Reply payload size */ 
-  char *payload = (char*)calloc(plBytes, _byte_size_);
+  uint8_t *payload = (uint8_t*)calloc(plBytes, _byte_size_);
   for (uint8_t i = 0; i < plBytes; i++) {
     payload[i] = ctx->dev.rxADU[ _replyData + i ];
   }
-  uint8_t fCode    = strtol(mbrValue(mbr, function), NULL, 10);
   uint8_t isSigned = strtol(mbrValue(mbr, signal  ), NULL, 10);
-  int32_t raw_value = (int8_t)payload[0];
+  int32_t raw_value = 0;
   float value = 0.0;
-  if( fCode >= readHoldingRegisters ){ /* DOUBLE WORD SIZE 32bits*/
-    int8_t msb = (int8_t)payload[0], lsb = (int8_t)payload[1];
+  if( plBytes == sizeof(int32_t) ){ /* DOUBLE WORD SIZE 32bits*/
+    uint8_t msb = payload[0];
+    uint8_t lsb = payload[1];
     uint32_t rawValueMsb = STOL(msb, lsb); 
-    msb = (int8_t)payload[2], lsb = (int8_t)payload[3];
+    msb = payload[2];
+    lsb = payload[3];
     uint32_t rawValueLsb = STOL(msb, lsb);
     raw_value = (rawValueMsb << 16) | rawValueLsb;
   }
-  else{ /* WORD SIZE 16bits */
-    int8_t msb = (int8_t)payload[0], lsb = (int8_t)payload[1];
+  else if(plBytes == sizeof(int16_t)) { /* WORD SIZE 16bits */
+    uint8_t msb = payload[0];
+    uint8_t lsb = payload[1];
     raw_value = STOL(msb, lsb);
+  }
+  else{
+#ifndef QUIET_OUTPUT
+    printf("Error: Payload size %d \n", plBytes);
+#endif   
+    free(payload);
+    return failure;
   }
   free(payload);
   uint16_t _scale_ = (uint16_t)strtol(mbrValue(mbr, scale), NULL, 10);
   if(isSigned) 
-    value = (float4_t)raw_value/(int16_t)_scale_;
+    value = (float4_t)(raw_value / (int16_t)_scale_);
   else 
-    value = (float4_t)(((uint32_t)raw_value)/_scale_);
+    value = (float4_t)( ( (uint32_t)raw_value ) / _scale_ );
   if(value > strtold(_mbpoll_max_value_, NULL)){
 #ifndef QUIET_OUTPUT
     printf("Error: Value to high %.02f", value);
@@ -355,9 +364,9 @@ int mbParseReply(mbCtx *ctx, uint8_t replySize){
   }
   uint16_t tID, pID, fBytes;
   uint8_t uID, fCD, plBytes;
-  tID  = (uint16_t)STOL(ctx->dev.rxADU[ _tIDMsb ], ctx->dev.rxADU[ _tIDLsb ]); /* MBAP */
-  pID  = (uint16_t)STOL(ctx->dev.rxADU[ _pIDMsb ], ctx->dev.rxADU[ _pIDLsb ]); 
-  fBytes = (uint16_t)STOL(ctx->dev.rxADU[ _dSZMsb ], ctx->dev.rxADU[ _dSZLsb ]);
+  tID  = (uint16_t)STOL((uint8_t)ctx->dev.rxADU[ _tIDMsb ], (uint8_t)ctx->dev.rxADU[ _tIDLsb ]); /* MBAP */
+  pID  = (uint16_t)STOL((uint8_t)ctx->dev.rxADU[ _pIDMsb ], (uint8_t)ctx->dev.rxADU[ _pIDLsb ]); 
+  fBytes = (uint16_t)STOL((uint8_t)ctx->dev.rxADU[ _dSZMsb ], (uint8_t)ctx->dev.rxADU[ _dSZLsb ]);
   uID  = (uint8_t)ctx->dev.rxADU[_uID]; 
   fCD  = (uint8_t)ctx->dev.rxADU[_replyFC]; /* PDU */ 
   plBytes = (uint8_t)ctx->dev.rxADU[_reply_plBytes]; /* Reply payload size */ 
