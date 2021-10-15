@@ -19,7 +19,7 @@ lastValid = 0.0
 
 MB_REGISTER_START
 function = 04
-address  = 08005
+address  = 08003
 size     = 2
 format   = UL_08
 signal   = 0
@@ -30,7 +30,7 @@ lastValid = 0.0
 
 MB_REGISTER_START
 function = 04
-address  = 00065
+address  = 00063
 size     = 2
 format   = UL_08
 signal   = 0
@@ -41,7 +41,7 @@ lastValid = 0.0
 
 MB_REGISTER_START
 function = 04
-address  = 00061
+address  = 00059
 size     = 2
 format   = SL_08
 signal   = 1
@@ -52,7 +52,7 @@ lastValid = 0.0
 
 MB_REGISTER_START
 function = 04
-address  = 00063
+address  = 00061
 size     = 2
 format   = SL_08
 signal   = 1
@@ -122,10 +122,10 @@ lastValid = 0.0
 
 MB_REGISTER_START
 function = 04
-address  = 00721
+address  = 00719
 size     = 2
 format   = SL_00
-signal   = 0
+signal   = 1
 scale    = 1
 unit     = hh
 meaning  = Maintenance_Hours_1
@@ -133,10 +133,10 @@ lastValid = 0.0
 
 MB_REGISTER_START
 function = 04
-address  = 00723
+address  = 00721
 size     = 2
 format   = SL_00
-signal   = 0
+signal   = 1
 scale    = 1
 unit     = hh
 meaning  = Maintenance_Hours_2
@@ -144,7 +144,7 @@ lastValid = 0.0
 
 MB_REGISTER_START
 function = 04
-address  = 00725
+address  = 00723
 size     = 2
 format   = SL_00
 signal   = 0
@@ -181,7 +181,7 @@ lastValid = 0.0
 
 MB_REGISTER_START
 function = 04
-address  = 00090
+address  = 00088
 size     = 2
 format   = UL_00
 signal   = 0

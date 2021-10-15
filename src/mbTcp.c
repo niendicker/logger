@@ -15,7 +15,6 @@
 
 #define LTOS_LSB(LONG) (LONG & 0xFF)
 #define LTOS_MSB(LONG) ((LONG >> 8) & 0xFF)
-#define STOL(S_MSB, S_LSB) ( (((uint16_t)S_MSB << 8) & 0xFF00) | (S_LSB & 0x00FF) )
 
 /**
  * @brief Load context config parameters from filePath file
@@ -304,45 +303,26 @@ int _mbReplyRaw(const mbCtx *ctx){
  * @brief Interpret and update lstValid for specific mbr
  */
 int mbUpdateValue(mbCtx *ctx, _ln *mbr){
-  uint8_t plBytes = (uint8_t)ctx->dev.rxADU[_reply_plBytes]; /* Reply payload size */ 
-  uint8_t *payload = (uint8_t*)calloc(plBytes, _byte_size_);
-  for (uint8_t i = 0; i < plBytes; i++) {
-    payload[i] = ctx->dev.rxADU[ _replyData + i ];
+  uint8_t plBytes = (uint8_t)ctx->dev.rxADU[_reply_plBytes]; /*payload Bytes*/ 
+  assert(plBytes <= 4);
+  uint8_t *mbrData = (uint8_t*)calloc(plBytes, _byte_size_);
+  memcpy(mbrData, &ctx->dev.rxADU[_replyData], plBytes);  
+  uint32_t raw_value = BTOW(mbrData[0], mbrData[1]); /*WORD*/
+  if( plBytes == sizeof(int32_t) ){ /*DOUBLE WORD*/
+    uint32_t rawValueLsb = BTOW(mbrData[2], mbrData[3]);
+    raw_value =  BTOW(raw_value, rawValueLsb);
   }
-  uint32_t raw_value = 0;
-  float value = 0.0;
-  if( plBytes == sizeof(int32_t) ){ /* DOUBLE WORD SIZE 32bits*/
-    uint32_t rawValueMsb = STOL(payload[0], payload[1]); 
-    uint32_t rawValueLsb = STOL(payload[2], payload[3]);
-    raw_value = ((rawValueMsb << 16) & 0xFFFF0000) | (rawValueLsb & 0x0000FFFF);
-  }
-  else if(plBytes == sizeof(int16_t)) { /* WORD SIZE 16bits */
-    raw_value = STOL(payload[0], payload[1]);
-  }
-  else{
-#ifndef QUIET_OUTPUT
-    printf("Error: Payload size %d \n", plBytes);
-#endif   
-    free(payload);
-    return failure;
-  }
-  free(payload);
+  free(mbrData);
   uint8_t isSigned = strtol(mbrValue(mbr, signal), NULL, 10);
-  uint16_t _scale_ = strtol(mbrValue(mbr, scale), NULL, 10);
-  if(isSigned) 
-    value = (float4_t)((float4_t)raw_value / (float4_t)_scale_);
-  else 
-    value = (float4_t)((float4_t)raw_value / (float4_t)_scale_);
-  if(value > strtold(_mbpoll_max_value_, NULL)){
-#ifndef QUIET_OUTPUT
-    printf("Error: Value to high %.02f \n", value);
-#endif   
-    return failure;
-  }
-  char *floatValue = salloc(strlen(_mbpoll_max_value_));
-  sprintf(floatValue, "%.02f", value);
-  updateValue(mbr, floatValue);      
-  free(floatValue);
+  raw_value = isSigned ? ((~raw_value)+1) : raw_value; /* SIGNAL: 2s complement representation */
+  int16_t _scale_ = strtol(mbrValue(mbr, scale), NULL, 10);
+  assert(_scale_);
+  float parsedValue = (float4_t)((float4_t)raw_value / (float4_t)_scale_); /* APPLY SCALE */
+  assert(parsedValue <= strtold(_mbpoll_max_value_, NULL));
+  char *value = salloc(strlen(_mbpoll_max_value_));
+  sprintf(value, "%.02f", parsedValue);
+  updateValue(mbr, value); /* SAVE PARSED VALUE */     
+  free(value);
   return done;
 };
 
@@ -360,9 +340,9 @@ int mbParseReply(mbCtx *ctx, _ln *mbr, uint8_t replySize){
   }
   uint16_t tID, pID, fBytes;
   uint8_t uID, fCD, plBytes;
-  tID  = (uint16_t)STOL((uint8_t)ctx->dev.rxADU[ _tIDMsb ], (uint8_t)ctx->dev.rxADU[ _tIDLsb ]); /* MBAP */
-  pID  = (uint16_t)STOL((uint8_t)ctx->dev.rxADU[ _pIDMsb ], (uint8_t)ctx->dev.rxADU[ _pIDLsb ]); 
-  fBytes = (uint16_t)STOL((uint8_t)ctx->dev.rxADU[ _dSZMsb ], (uint8_t)ctx->dev.rxADU[ _dSZLsb ]);
+  tID  = (uint16_t)BTOW((uint8_t)ctx->dev.rxADU[ _tIDMsb ], (uint8_t)ctx->dev.rxADU[ _tIDLsb ]); /* MBAP */
+  pID  = (uint16_t)BTOW((uint8_t)ctx->dev.rxADU[ _pIDMsb ], (uint8_t)ctx->dev.rxADU[ _pIDLsb ]); 
+  fBytes = (uint16_t)BTOW((uint8_t)ctx->dev.rxADU[ _dSZMsb ], (uint8_t)ctx->dev.rxADU[ _dSZLsb ]);
   uID  = (uint8_t)ctx->dev.rxADU[_uID]; 
   fCD  = (uint8_t)ctx->dev.rxADU[_replyFC]; /* PDU */ 
   plBytes = (uint8_t)ctx->dev.rxADU[_reply_plBytes]; /* Reply payload size */ 
@@ -484,11 +464,9 @@ int saveData(mbCtx *_mbCtx){
   _ln *mbr = _mbCtx->dev.mbr;
   assert(mbr);
   _ln *deviceData = pushDeviceData(deviceID, mbr);
-  for(int i=0; i < 5; i++){ /*  */
-    if(persistData(deviceData, _mbCtx->dev.config) != NULL){
+  if(persistData(deviceData, _mbCtx->dev.config) != NULL){
       dropDeviceData(deviceData);
       return 0;
-    }
   }
   dropDeviceData(deviceData);
   return -1;
