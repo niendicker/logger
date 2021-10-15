@@ -44,7 +44,7 @@ typedef double float8_t;
 /* Modbuspoll data export  */
 #define _sql_template_copy_    ((char*)"template_copy.sql")
 #define _sql_template_line_    ((uint)200)
-#define _csv_file_             ((char*)"mbpoll.csv")
+#define _csv_file_             ((char*)".csv")
 #define _csv_timestamp_header_ ((char*)"local_timestamp,") /* CSV default column */
 #define _csv_                  ((char*)"csv"  )
 #define _csv_std_delimiter_    (',')
@@ -69,13 +69,12 @@ typedef struct __csvContext {
 typedef struct __sqlContext {
   char *pid; /* Is used to generate unique cvs filename*/
   char *hostname;
-  int16_t port;
+  char *port;
   char *auth; 
   char *user;
   char *database;
-  char *schema;
   char *table;
-  char *sqlTemplate; /* Sql script template. tags: %s %d %f... */
+  //char *sqlTemplate; /* Sql script template. tags: %s %d %f... */
   _csvCtx inoutFile;
 } _sqlCtx;
 

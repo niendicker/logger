@@ -56,7 +56,7 @@ char *peekValue(_ln *listNode, char *key);
  * @brief  Update the value of a given key
  * @return _mbrTupleNode|NULL
  */
-char *updateValue(_ln *listNode, char *key, char* value);
+char *updateValue(_ln *listNode, char* value);
 
 /**
  * @brief  Print to stdout the data of a given list node

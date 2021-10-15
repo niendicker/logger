@@ -16,7 +16,6 @@ int main(int argc , char *argv[]) {
     help();
     exit(done);
   }
-
   mbCtx **devices;
   char *dir = salloc_init(argv[configDir]);
   devices = initDevices(dir);
@@ -25,7 +24,7 @@ int main(int argc , char *argv[]) {
     exit(EXIT_FAILURE);
   mbCtx *mbDevice = devices[0];
   if( mbTcpConnect(mbDevice) == failure ) {
-    exit(failure);
+    exit(EXIT_FAILURE);
   }
   char *pInterval = salloc_init(confValue(mbDevice->dev.config, pollingInterval_ms));
   char *pCout = salloc_init(confValue(mbDevice->dev.config, pollingIteractions));
@@ -44,21 +43,21 @@ int main(int argc , char *argv[]) {
     if(poll < pollCount){
       if (mbUpdateAll(mbDevice) == failure)
         commError += eThreshold > 0 ? 1 : 0;
-      if(saveData(mbDevice) == -1){ /* Just notify and keep polling */
+      else if(saveData(mbDevice) == -1){ /* Just notify and keep polling */
 #ifndef QUIET_OUTPUT
         printf("\nError: Can't save data \n");
 #endif        
       }
+      if ((commError >= eThreshold) && (eThreshold != 0)) {
+#ifndef QUIET_OUTPUT 
+        printf("\nError: Polling terminated due to communication error limit\n");
+#endif
+        break;
+      }
     }
     else {
 #ifndef QUIET_OUTPUT
-      printf("\nInfo: Polling terminated due to argument polling count\n");
-#endif
-      break;
-    }
-    if (commError >= (eThreshold+1)) {
-#ifndef QUIET_OUTPUT 
-      printf("\nError: Polling terminated due to communication error limit\n");
+      printf("\nInfo: Polling done. Thanks!\n");
 #endif
       break;
     }
@@ -89,12 +88,6 @@ mbCtx **initDevices(char *configDir){
 
 int help(){
   printf("\t\tmodbusPoll v%s.%s\n", VERSION_MAJOR, VERSION_MINOR);
-  FILE *helpDoc = fopen("../README", "r");
-  assert(helpDoc);
-  puts("");
-  for( int c; (c=fgetc(helpDoc)) != EOF; printf("%c", c) );
-  puts("");
-  fclose(helpDoc);
   return done;
 }; /* help */
 

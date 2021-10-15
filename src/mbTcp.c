@@ -15,7 +15,7 @@
 
 #define LTOS_LSB(LONG) (LONG & 0xFF)
 #define LTOS_MSB(LONG) ((LONG >> 8) & 0xFF)
-#define STOL(S_MSB, S_LSB) ( (int16_t)(S_MSB << 8) + S_LSB )
+#define STOL(S_MSB, S_LSB) ( (((uint16_t)S_MSB << 8) & 0xFF00) | (S_LSB & 0x00FF) )
 
 /**
  * @brief Load context config parameters from filePath file
@@ -31,7 +31,7 @@ mbCtx *mbInit(const char *mbDevConfigFile) {
   newDev->adu.mbap._uID = newDev->dev.link.modbusRtu.unitAddress; /* Serial line address */
   newDev->adu.mbap._fBytes = 0;
   newDev->dev.link.modbusTcp.socket = failure;
-  newDev->dev.txADU = salloc(_adu_size_);
+  newDev->dev.txADU = salloc(_adu_query_max_size_);
   newDev->dev.rxADU = salloc(_adu_reply_max_size_);
 #ifndef QUIET_OUTPUT
   mbShowConf(newDev);    
@@ -110,6 +110,8 @@ int mbTcpDisconnect(mbCtx * ctx) {
   if(socket > 0)
     close(*socket);
   *socket = 0;
+  memset(ctx->dev.txADU, 0, _adu_query_max_size_);
+  memset(ctx->dev.rxADU, 0, _adu_reply_max_size_);
 #ifndef QUIET_OUTPUT
   printf("Info: Socket closed \n");
 #endif
@@ -197,7 +199,7 @@ int mbInitMBAP(mbCtx *ctx) {
   uint8_t uID;
   tID    = (uint16_t)rand();
   pID    = ctx->dev.link.protocol;
-  fBytes = _adu_size_ - _uID;
+  fBytes = _adu_query_max_size_ - _uID;
   uID    = ctx->dev.link.modbusRtu.unitAddress;
   ctx->dev.txADU[ _tIDLsb ] = (uint8_t)LTOS_LSB(tID); /* BEGIN QUERY FRAME */
   ctx->dev.txADU[ _tIDMsb ] = (uint8_t)LTOS_MSB(tID);
@@ -237,13 +239,15 @@ int mbSendRequest(mbCtx *ctx, _ln *mbr){
   mbInitMBAP(ctx); /* copy data from internal structure to txVector */
   uint8_t fCode = (uint8_t)strtol(mbrValue(mbr, function) , NULL, 10);
   uint16_t mbrAddress = (uint16_t)strtol(mbrValue(mbr, address) , NULL, 10);
-  uint16_t mbrSize = (uint16_t)strtol(mbrValue(mbr,   size) , NULL, 10);
+  uint16_t mbrSize = (uint16_t)strtol(mbrValue(mbr, size) , NULL, 10);
   mbInitPDU(ctx, fCode, mbrAddress, mbrSize);
 #ifndef QUIET_OUTPUT
   _mbRequestRaw(ctx);
 #endif
-  while(recv(ctx->dev.link.modbusTcp.socket, NULL, 1, MSG_DONTWAIT)!=(-1)); /*Clear socket buffer*/
-  if (send(ctx->dev.link.modbusTcp.socket, ctx->dev.txADU, _adu_size_, MSG_WAITALL) != _adu_size_) {
+  char *tmp = salloc(_byte_size_);
+  while(recv(ctx->dev.link.modbusTcp.socket, tmp, 1, MSG_DONTWAIT)!=(-1)); /*Clear socket buffer*/
+  free(tmp);
+  if (send(ctx->dev.link.modbusTcp.socket, ctx->dev.txADU, _adu_query_max_size_, MSG_WAITALL) != _adu_query_max_size_) {
 #ifndef QUIET_OUTPUT
     puts("Error: Can't send data to device");
 #endif
@@ -258,7 +262,7 @@ int mbSendRequest(mbCtx *ctx, _ln *mbr){
 int _mbRequestRaw(const mbCtx *ctx){
   assert(ctx);
   printf("Info: Modbus Query: ");
-  for (int i = 0; i < _adu_size_; i++){
+  for (int i = 0; i < _adu_query_max_size_; i++){
     uint8_t data = (uint8_t)ctx->dev.txADU[i];
     printf("%02X", data); /* Hex value */
   }
@@ -300,31 +304,44 @@ int _mbReplyRaw(const mbCtx *ctx){
  * @brief Interpret and update lstValid for specific mbr
  */
 int mbUpdateValue(mbCtx *ctx, _ln *mbr){
-  uint8_t plSz = (uint8_t)ctx->dev.rxADU[_replySZ]; /* Reply payload size */ 
-  char *payload = (char*)calloc(plSz, _byte_size_);
-  for (uint8_t i = 0; i < plSz; i++) {
+  uint8_t plBytes = (uint8_t)ctx->dev.rxADU[_reply_plBytes]; /* Reply payload size */ 
+  uint8_t *payload = (uint8_t*)calloc(plBytes, _byte_size_);
+  for (uint8_t i = 0; i < plBytes; i++) {
     payload[i] = ctx->dev.rxADU[ _replyData + i ];
   }
-  uint8_t fCode    = strtol(mbrValue(mbr, function), NULL, 10);
-  uint8_t isSigned = strtol(mbrValue(mbr, signal  ), NULL, 10);
-  int32_t raw_value = (int8_t)payload[0];
+  uint32_t raw_value = 0;
   float value = 0.0;
-  if( fCode >= readHoldingRegisters ){ /* WORD SIZE(16bits) VALUES */
-    int8_t msb = (int8_t)payload[0], lsb = (int8_t)payload[1];
-    raw_value = STOL(msb, lsb);
+  if( plBytes == sizeof(int32_t) ){ /* DOUBLE WORD SIZE 32bits*/
+    uint32_t rawValueMsb = STOL(payload[0], payload[1]); 
+    uint32_t rawValueLsb = STOL(payload[2], payload[3]);
+    raw_value = ((rawValueMsb << 16) & 0xFFFF0000) | (rawValueLsb & 0x0000FFFF);
   }
-  else{ /* 8bits value */
-    raw_value = payload[0];
+  else if(plBytes == sizeof(int16_t)) { /* WORD SIZE 16bits */
+    raw_value = STOL(payload[0], payload[1]);
   }
-  int16_t scl = strtol(mbrValue(mbr, scale   ), NULL, 10);
-  if(isSigned) 
-    value = (float4_t)raw_value/scale;
-  else 
-    value = (float4_t)(((uint16_t)raw_value)/scl);
-  char *floatValue = salloc(strlen("10000.00"));
-  sprintf(floatValue, "%.02f", value);
-  updateValue(mbr, (char*)"lastValid", floatValue);      
+  else{
+#ifndef QUIET_OUTPUT
+    printf("Error: Payload size %d \n", plBytes);
+#endif   
+    free(payload);
+    return failure;
+  }
   free(payload);
+  uint8_t isSigned = strtol(mbrValue(mbr, signal), NULL, 10);
+  uint16_t _scale_ = strtol(mbrValue(mbr, scale), NULL, 10);
+  if(isSigned) 
+    value = (float4_t)((float4_t)raw_value / (float4_t)_scale_);
+  else 
+    value = (float4_t)((float4_t)raw_value / (float4_t)_scale_);
+  if(value > strtold(_mbpoll_max_value_, NULL)){
+#ifndef QUIET_OUTPUT
+    printf("Error: Value to high %.02f \n", value);
+#endif   
+    return failure;
+  }
+  char *floatValue = salloc(strlen(_mbpoll_max_value_));
+  sprintf(floatValue, "%.02f", value);
+  updateValue(mbr, floatValue);      
   free(floatValue);
   return done;
 };
@@ -333,18 +350,22 @@ int mbUpdateValue(mbCtx *ctx, _ln *mbr){
  * @brief When a correct modbus reply data size is received
  *        this function parse and save received data to ctx  
 **/
-int mbParseReply(mbCtx *ctx, uint8_t replySize){
-  assert(ctx);
-  if(replySize < reply_size_min)
+int mbParseReply(mbCtx *ctx, _ln *mbr, uint8_t replySize){
+  assert(ctx && mbr);
+  if(replySize < reply_size_min){
+#ifndef QUIET_OUTPUT
+    printf("Error: Reply size too short %d", replySize);
+#endif  
     return failure;
+  }
   uint16_t tID, pID, fBytes;
   uint8_t uID, fCD, plBytes;
-  tID  = (uint16_t)STOL(ctx->dev.rxADU[ _tIDMsb ], ctx->dev.rxADU[ _tIDLsb ]); /* MBAP */
-  pID  = (uint16_t)STOL(ctx->dev.rxADU[ _pIDMsb ], ctx->dev.rxADU[ _pIDLsb ]); 
-  fBytes = (uint16_t)STOL(ctx->dev.rxADU[ _dSZMsb ], ctx->dev.rxADU[ _dSZLsb ]);
+  tID  = (uint16_t)STOL((uint8_t)ctx->dev.rxADU[ _tIDMsb ], (uint8_t)ctx->dev.rxADU[ _tIDLsb ]); /* MBAP */
+  pID  = (uint16_t)STOL((uint8_t)ctx->dev.rxADU[ _pIDMsb ], (uint8_t)ctx->dev.rxADU[ _pIDLsb ]); 
+  fBytes = (uint16_t)STOL((uint8_t)ctx->dev.rxADU[ _dSZMsb ], (uint8_t)ctx->dev.rxADU[ _dSZLsb ]);
   uID  = (uint8_t)ctx->dev.rxADU[_uID]; 
   fCD  = (uint8_t)ctx->dev.rxADU[_replyFC]; /* PDU */ 
-  plBytes = (uint8_t)ctx->dev.rxADU[_replySZ]; /* Reply payload size */ 
+  plBytes = (uint8_t)ctx->dev.rxADU[_reply_plBytes]; /* Reply payload size */ 
   if(tID != ctx->adu.mbap._tID){  /* Transaction ID need to be the same for query/reply */
 #ifndef QUIET_OUTPUT
     printf("Error: Transaction ID %d \n", tID);
@@ -364,7 +385,7 @@ int mbParseReply(mbCtx *ctx, uint8_t replySize){
     return failure;
   }
   uint8_t fcdRequest = ctx->adu.pdu.functionCode; 
-  if(fCD == (fcdRequest + 0x80)){
+  if(fCD == (fcdRequest + exceptionOffset)){
 #ifndef QUIET_OUTPUT
     printf("Error: Exception received %d \n", fCD);
 #endif   
@@ -382,7 +403,7 @@ int mbParseReply(mbCtx *ctx, uint8_t replySize){
 #endif   
     return failure;
   }
-  return mbUpdateValue(ctx, ctx->dev.mbr);
+  return mbUpdateValue(ctx, mbr);
 };
 
 /**
@@ -390,7 +411,7 @@ int mbParseReply(mbCtx *ctx, uint8_t replySize){
 **/
 int mbGetReply(mbCtx *ctx, _ln *mbr) {
   assert(ctx && ctx->dev.link.modbusTcp.socket);
-  int replyDelay = waitReply(ctx);
+  uint32_t replyDelay = waitReply(ctx);
   uint32_t timeout = ctx->dev.link.modbusTcp.msTimeout * 10E2;
   if(replyDelay == timeout){
 #ifndef QUIET_OUTPUT
@@ -398,12 +419,14 @@ int mbGetReply(mbCtx *ctx, _ln *mbr) {
 #endif
     return failure;    
   }
-  uint8_t replySize = recv(ctx->dev.link.modbusTcp.socket, ctx->dev.rxADU, _adu_size_, MSG_DONTWAIT);
+  uint8_t replySize = recv(ctx->dev.link.modbusTcp.socket, ctx->dev.rxADU, _adu_query_max_size_, MSG_DONTWAIT);
 #ifndef QUIET_OUTPUT
-  _mbReplyRaw(ctx);
+  _mbReplyRaw(ctx); 
   printf("Info: Reply time  : ~%.02f ms\n", replyDelay/10E2);
 #endif 
-  return mbParseReply(ctx, replySize);
+  int status = mbParseReply(ctx, mbr, replySize);
+  memset(ctx->dev.rxADU, 0, _adu_reply_max_size_);
+  return status;
 };
 
 /**
