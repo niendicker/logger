@@ -85,14 +85,14 @@ enum requestPDUi { /* PDU data index from ADU[sizeof(MBAP)]*/
   _mbrAddrLsb,
   _mbrSizeMsb,
   _mbrSizeLsb,
-  _adu_size_ /* Reference for modbus QUERY/REPLY MAXIMUM SIZE */
+  _adu_query_max_size_ /* Reference for modbus QUERY/REPLY MAXIMUM SIZE */
 };           /* MBAP + PDU = Modbus message */
 
 enum replyPDUi { /* Reply PDU data index */
   _replyFC = (_mbap_size_),
   _reply_plBytes, /* following payload bytes */
   _replyData, /* payload start data*/
-  _adu_reply_max_size_ = (_adu_size_ + 1) /*  */
+  _adu_reply_max_size_ = (_adu_query_max_size_ + 1) /*  */
 };
 
 enum _aduBytes { /* From Modbus specification */
@@ -274,7 +274,7 @@ int mbUpdateValue(mbCtx *ctx, _ln *mbr);
  * @param  ctx Modbus device Context
  * @return done|failure
  */
-int mbParseReply(mbCtx *ctx, uint8_t replySize);
+int mbParseReply(mbCtx *ctx, _ln *mbr, uint8_t replySize);
 
 /**
  * @brief Save all modbus registers value 

@@ -5,8 +5,7 @@
 **/
 __uint64_t djb2_hash(const char *str) {
   __uint64_t hash = 5381;
-  int c;
-  for(; (c = (uint8_t)*str++); )
+  for(int c; (c = (uint8_t)*str++); )
       hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
   return hash;
 };

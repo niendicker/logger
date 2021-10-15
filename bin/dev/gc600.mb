@@ -6,10 +6,9 @@
 #------------------------------------------------------------------------------
 # GENERATOR ELECTRIC VALUES
 #------------------------------------------------------------------------------
-#Generator frequency
 MB_REGISTER_START
 function = 04
-address  = 00029
+address  = 00028
 size     = 1
 format   = US_08
 signal   = 0
@@ -18,7 +17,6 @@ unit     = Hz
 meaning  = Generator_Frequency
 lastValid = 0.0
 
-#Generator average voltage
 MB_REGISTER_START
 function = 04
 address  = 08005
@@ -30,7 +28,6 @@ unit     = V
 meaning  = Generator_Avg_Voltage
 lastValid = 0.0
 
-#Generator apparent power
 MB_REGISTER_START
 function = 04
 address  = 00065
@@ -42,7 +39,6 @@ unit     = KVA
 meaning  = Generator_Apparent_Power
 lastValid = 0.0
 
-#Generator average active power
 MB_REGISTER_START
 function = 04
 address  = 00061
@@ -54,7 +50,6 @@ unit     = KW
 meaning  = Generator_Avg_Active_Power
 lastValid = 0.0
 
-#Generator average reactive power
 MB_REGISTER_START
 function = 04
 address  = 00063
@@ -70,10 +65,9 @@ lastValid = 0.0
 #------------------------------------------------------------------------------
 # GENERATOR ENGINE VALUES
 #------------------------------------------------------------------------------
-#Engine speed
 MB_REGISTER_START
 function = 04
-address  = 00081
+address  = 00080
 size     = 1
 format   = US_00
 signal   = 0
@@ -82,7 +76,6 @@ unit     = rpm
 meaning  = Engine_Speed
 lastValid = 0.0
 
-#Battery voltage
 MB_REGISTER_START
 function = 04
 address  = 00073
@@ -94,7 +87,6 @@ unit     = V
 meaning  = Battery_Voltage
 lastValid = 0.0
 
-#Coolant temperature
 MB_REGISTER_START
 function = 04
 address  = 00078
@@ -106,10 +98,9 @@ unit     = C
 meaning  = Coolant_Temperature
 lastValid = 0.0
 
-#Oil pressure
 MB_REGISTER_START
 function = 04
-address  = 00077
+address  = 00076
 size     = 1
 format   = US_08
 signal   = 0
@@ -118,7 +109,6 @@ unit     = bar
 meaning  = Oil_Pressure
 lastValid = 0.0
 
-#Working hours
 MB_REGISTER_START
 function = 04
 address  = 00071
@@ -130,50 +120,46 @@ unit     = hh
 meaning  = Working_Hours
 lastValid = 0.0
 
-#Maintenance hours 1
 MB_REGISTER_START
 function = 04
 address  = 00721
 size     = 2
 format   = SL_00
-signal   = 1
+signal   = 0
 scale    = 1
 unit     = hh
 meaning  = Maintenance_Hours_1
 lastValid = 0.0
 
-#Maintenance hours 2
 MB_REGISTER_START
 function = 04
 address  = 00723
 size     = 2
 format   = SL_00
-signal   = 1
+signal   = 0
 scale    = 1
 unit     = hh
 meaning  = Maintenance_Hours_2
 lastValid = 0.0
 
-#Maintenance days
 MB_REGISTER_START
 function = 04
 address  = 00725
 size     = 2
 format   = SL_00
-signal   = 1
+signal   = 0
 scale    = 1
 unit     = dd
 meaning  = Maintenance_Days
 lastValid = 0.0
 
 
-#------------------------------------------------------------------------------
-# MAINS VALUES
-#------------------------------------------------------------------------------
-#Mains frequency
+###------------------------------------------------------------------------------
+### MAINS VALUES
+##------------------------------------------------------------------------------
 MB_REGISTER_START
 function = 04
-address  = 00030
+address  = 00029
 size     = 1
 format   = US_08
 signal   = 0
@@ -182,7 +168,6 @@ unit     = Hz
 meaning  = Mains_Frequency
 lastValid = 0.0
 
-#Mains average voltage
 MB_REGISTER_START
 function = 04
 address  = 08003
@@ -194,7 +179,6 @@ unit     = V
 meaning  = Mains_Avg_Voltage
 lastValid = 0.0
 
-#Mains frequency
 MB_REGISTER_START
 function = 04
 address  = 00090
@@ -205,6 +189,3 @@ scale    = 1
 unit     = KWh
 meaning  = Mains_Active_Energy
 lastValid = 0.0
-
-
-
