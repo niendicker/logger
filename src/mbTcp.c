@@ -457,11 +457,7 @@ int dropDeviceData(_ln *deviceRow){
   char *columnID = salloc(_str_null_);
   while(deviceRow){ 
     columnID = srealloc_copy(columnID, deviceRow->data->key);
-    _dn *data = deviceRow->data;
-    while(data){
-      deleteData(deviceRow, columnID);
-      data = data->next;
-    }
+    deleteNode(deviceRow, columnID);
     deviceRow = deviceRow->next;
   }
   free(columnID);

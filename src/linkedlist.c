@@ -86,23 +86,18 @@ void listNode(_ln *listNode){
 /**
  * @brief  Delete the data specified by key on any list node
  */
-void deleteData(_ln *listNode, const char *key){
-  _dn *dn = listNode->data, *prev;
+void deleteData(_dn *data, const char *key){
+  _dn *dn = data;
   uint64_t hash = djb2_hash(key);
-  if(dn != NULL && ( hash == dn->keyHash )){
-    listNode->data = dn->next; 
-    free(dn);
-    return;
-  }
-  while( dn != NULL &&  hash != dn->keyHash) { 
-    prev = dn;
+  while( dn ){
+    if(hash == dn->keyHash){
+      free(dn->key);
+      free(dn->value);
+      free(dn);
+      return;
+    }
     dn = dn->next;
   }
-  if(dn == NULL) return;
-  prev->next = dn->next;
-  free(dn->key);
-  free(dn->value);
-  free(dn);
 };
 
 /**
@@ -111,20 +106,19 @@ void deleteData(_ln *listNode, const char *key){
 void deleteNode(_ln *listNode, const char *key){
   assert(listNode && key);
   uint64_t hash = djb2_hash(key);
-  _ln *ln = listNode, *prev;
-  while( ln ){
-    prev = ln;
-    _dn *dn = ln->data;
-    while(dn){
-      if( dn->keyHash == hash ){
-        deleteData(ln, dn->key);
+  _ln *node = listNode;
+
+  while(node){
+    _dn *dn = node->data;
+    if( dn->keyHash == hash ){
+      while(dn){
+        deleteData(dn, dn->key);
         dn = dn->next;
-        prev->next = ln->next;
-        free(ln);
-        return;
       }
+      node = node->next;
+      return;
     }
-    ln = ln->next;
+    node = node->next;
   }
 };
 
