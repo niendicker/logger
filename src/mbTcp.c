@@ -300,25 +300,39 @@ int _mbReplyRaw(const mbCtx *ctx){
 };
 
 /**
- * @brief Interpret and update lstValid for specific mbr
+ * @brief Parse and update lstValid for specific mbr
  */
 int mbUpdateValue(mbCtx *ctx, _ln *mbr){
   uint8_t plBytes = (uint8_t)ctx->dev.rxADU[_reply_plBytes]; /*payload Bytes*/ 
   assert(plBytes <= 4);
+
   uint8_t *mbrData = (uint8_t*)calloc(plBytes, _byte_size_);
   memcpy(mbrData, &ctx->dev.rxADU[_replyData], plBytes);  
-  uint32_t raw_value = BTOW(mbrData[0], mbrData[1]); /*WORD*/
+
+  uint8_t isSigned = strtol(mbrValue(mbr, signal), NULL, 10);
+
+  int32_t raw_value = BTOW(mbrData[0], mbrData[1]); /*WORD*/
   if( plBytes == sizeof(int32_t) ){ /*DOUBLE WORD*/
-    uint32_t rawValueLsb = BTOW(mbrData[2], mbrData[3]);
-    raw_value =  BTOW(raw_value, rawValueLsb);
+    int32_t rawValueMsb = BTOW(mbrData[2], mbrData[3]);
+    raw_value =  WTODW( rawValueMsb, raw_value);
+    if (isSigned == 1){
+      if(raw_value & 0x80000000)
+        raw_value = ((~raw_value)+1)*-1; /* 2s complement */
+    }
+  }
+  else{
+    if (isSigned == 1){
+      if (raw_value & 0x8000)
+        raw_value = ((~raw_value)+1)*-1;
+    }
   }
   free(mbrData);
-  uint8_t isSigned = strtol(mbrValue(mbr, signal), NULL, 10);
-  raw_value = isSigned ? ((~raw_value)+1) : raw_value; /* SIGNAL: 2s complement representation */
+
   int16_t _scale_ = strtol(mbrValue(mbr, scale), NULL, 10);
   assert(_scale_);
   float parsedValue = (float4_t)((float4_t)raw_value / (float4_t)_scale_); /* APPLY SCALE */
   assert(parsedValue <= strtold(_mbpoll_max_value_, NULL));
+
   char *value = salloc(strlen(_mbpoll_max_value_));
   sprintf(value, "%.02f", parsedValue);
   updateValue(mbr, value); /* SAVE PARSED VALUE */     
