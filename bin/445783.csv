@@ -1,0 +1,5 @@
+local_timestamp,Generator_Frequency,Generator_Avg_Voltage,Generator_Apparent_Power,Generator_Avg_Active_Power,Generator_Avg_Reactive_Power,Engine_Speed,Battery_Voltage,Coolant_Temperature,Oil_Pressure,Working_Hours,Maintenance_Hours_1,Maintenance_Hours_2,Maintenance_Days,Mains_Frequency,Mains_Avg_Voltage,Mains_Active_Energy,Mains_L1_Current
+2021-10-16 21:23:18-03,0.00,0.00,0.00,0.00,0.00,0.00,25.62,28.62,0.03,3062.00,34.00,284.00,120.00,60.04,117.28,0.00,2.23
+2021-10-16 21:23:20-03,0.00,0.00,0.00,0.00,0.00,0.00,25.63,28.61,0.03,3062.00,34.00,284.00,120.00,60.04,117.12,0.00,2.23
+2021-10-16 21:23:24-03,0.00,0.00,0.00,0.00,0.00,0.00,25.63,28.61,0.03,3062.00,34.00,284.00,120.00,60.04,117.30,0.00,2.23
+2021-10-16 21:23:27-03,0.00,0.00,0.00,0.00,0.00,0.00,25.63,28.61,0.03,3062.00,34.00,284.00,120.00,60.05,117.26,0.00,2.23

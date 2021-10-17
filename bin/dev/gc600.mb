@@ -2,6 +2,10 @@
 #register+++ is the open TAG for a register data block
 #space or comment after register block is the end tag
 
+#------------------------------------------------------------------------------
+# LOAD VALUES
+#------------------------------------------------------------------------------
+
 
 #------------------------------------------------------------------------------
 # GENERATOR ELECTRIC VALUES
@@ -188,4 +192,15 @@ signal   = 0
 scale    = 1
 unit     = KWh
 meaning  = Mains_Active_Energy
+lastValid = 0.0
+
+MB_REGISTER_START
+function = 04
+address  = 00026
+size     = 2
+format   = UL_08
+signal   = 0
+scale    = 256
+unit     = Arms
+meaning  = Mains_L1_Current
 lastValid = 0.0

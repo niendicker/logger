@@ -107,7 +107,6 @@ void deleteNode(_ln *listNode, const char *key){
   assert(listNode && key);
   uint64_t hash = djb2_hash(key);
   _ln *node = listNode;
-
   while(node){
     _dn *dn = node->data;
     if( dn->keyHash == hash ){
