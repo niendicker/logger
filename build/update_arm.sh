@@ -2,7 +2,8 @@
 
 #? UPDATE 
 target_user_name="pi"
-target_address='192.168.0.139'
+target_address='192.168.1.30'
+#target_address='192.168.0.139'
 target_home="/home/pi"
 target_folder="${target_home}/run"
 

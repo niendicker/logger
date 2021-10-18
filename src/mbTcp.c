@@ -124,14 +124,11 @@ int mbClose(mbCtx *ctx){
   mbTcpDisconnect(ctx);
   freeDeviceMap(&ctx->dev);
   freeDeviceConf(&ctx->dev);
-  ctx->adu.mbap._tID = 0;
-  ctx->adu.mbap._pID = 0; //Modbus protocol
-  ctx->adu.mbap._uID = 0; //Serial line or subnet address
-  ctx->adu.mbap._fBytes = 0;
-  ctx->dev.link.modbusTcp.socket = failure;
-  ctx->dev.link.modbusTcp.msTimeout = (uint8_t)min_timeout_ms; /* milli seconds */
-  ctx->dev.link.modbusRtu.msTimeout = (uint8_t)min_timeout_ms;
-  ctx = NULL;
+  free(ctx->dev.link.modbusTcp.hostname);
+  free(ctx->dev.link.modbusTcp.ipAddress);
+  free(ctx->dev.txADU);
+  free(ctx->dev.rxADU);
+  free(ctx);  
   return done;
 };
 
@@ -454,27 +451,34 @@ _ln* pushDeviceData(char *deviceID, _ln *deviceMbr){
 **/
 int dropDeviceData(_ln *deviceRow){
   assert(deviceRow);
-  char *columnID = salloc(_str_null_);
+  //char *columnID = salloc(_str_null_);
   while(deviceRow){ 
-    columnID = srealloc_copy(columnID, deviceRow->data->key);
-    deleteNode(deviceRow, columnID);
-    deviceRow = deviceRow->next;
+    _ln *lnNode = deviceRow->next;
+    //columnID = srealloc_copy(columnID, deviceRow->data->key);
+    deleteNode(deviceRow, deviceRow->data->key);
+    //free(deviceRow);
+    deviceRow = lnNode;
   }
-  free(columnID);
+  //free(columnID);
   return 0;
 }; /* dropDeviceData */
 
 /**
  * @brief  Store the data on postgresql
 **/
-int saveData(mbCtx *_mbCtx){
+int saveData(mbCtx *_mbCtx, uint8_t last){
   assert(_mbCtx);
+  static _sqlCtx *sqlCtx;
+  if(last == 1){
+    sqlCtxFree(sqlCtx);
+    return 0;
+  }
   char *deviceID = confValue(_mbCtx->dev.config, tag);
   assert(deviceID);
   _ln *mbr = _mbCtx->dev.mbr;
   assert(mbr);
   _ln *deviceData = pushDeviceData(deviceID, mbr);
-  if(persistData(deviceData, _mbCtx->dev.config) != NULL){
+  if( (sqlCtx = persistData(deviceData, _mbCtx->dev.config)) != NULL){
       dropDeviceData(deviceData);
       return 0;
   }

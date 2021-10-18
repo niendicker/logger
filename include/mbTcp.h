@@ -294,6 +294,6 @@ int dropDeviceData(_ln *deviceRow);
 /**
  * @brief  Store the data on postgresql
 **/
-int saveData(mbCtx *dev);
+int saveData(mbCtx *dev, uint8_t last);
 
 #endif /* ./include/modbusTcp.h */

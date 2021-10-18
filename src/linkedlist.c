@@ -91,9 +91,11 @@ void deleteData(_dn *data, const char *key){
   uint64_t hash = djb2_hash(key);
   while( dn ){
     if(hash == dn->keyHash){
+      _dn *dnNode = dn->next;
       free(dn->key);
       free(dn->value);
       free(dn);
+      dn = dnNode;
       return;
     }
     dn = dn->next;
@@ -111,10 +113,13 @@ void deleteNode(_ln *listNode, const char *key){
     _dn *dn = node->data;
     if( dn->keyHash == hash ){
       while(dn){
+        _dn *dnNext = dn->next;
         deleteData(dn, dn->key);
-        dn = dn->next;
+        dn = dnNext;
       }
-      node = node->next;
+      _ln *lnNode = node->next;
+      free(node);
+      node = lnNode;
       return;
     }
     node = node->next;

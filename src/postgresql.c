@@ -37,11 +37,14 @@ _sqlCtx *sqlCtxInit(_sqlCtx *sqlCtx, _ln *deviceConfig, _ln *deviceData){
 
 int sqlCtxFree(_sqlCtx *sqlCtx){
   assert(sqlCtx);
+  free(sqlCtx->pid);
   free(sqlCtx->table);
   free(sqlCtx->database);
   free(sqlCtx->user);
   free(sqlCtx->auth);
+  free(sqlCtx->port);
   free(sqlCtx->hostname); 
+  free(sqlCtx->inoutFile.fileName);
   free(sqlCtx->inoutFile.filePath);  
   free(sqlCtx);  
   return 0;
