@@ -3,7 +3,7 @@
 #     0 = Run production version anything else = Run debug version  
 mbpollHome="/home/pi/run/bin/"
 #mppollHome="/home/dev/dbms/00_rpi/bin"
-configDir="./dev/"
+configDir="./dev/$2/"
 
 if [ "$1" -ne 0 ];  
 then #RUN DEBUG VERSION

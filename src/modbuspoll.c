@@ -20,9 +20,14 @@ int main(int argc , char *argv[]) {
   char *dir = salloc_init(argv[configDir]);
   devices = initDevices(dir);
   free(dir);
-  if(!devices[0])
+  int count = 0;
+  //for(; devices[count] != NULL; count++){
+  //  fork();
+  //  break;
+  //}
+  if(!devices[count])
     exit(EXIT_FAILURE);
-  mbCtx *mbDevice = devices[0];
+  mbCtx *mbDevice = devices[count];
   if( mbTcpConnect(mbDevice) == failure ) {
     exit(EXIT_FAILURE);
   }
