@@ -2,7 +2,8 @@
 
 #? UPDATE 
 target_user_name="pi"
-target_address='192.168.0.139'
+target_address='192.168.1.30'
+#target_address='192.168.0.139'
 target_home="/home/pi"
 target_folder="${target_home}/run"
 
@@ -10,7 +11,7 @@ project_home="./00_rpi"
 files_home="${project_home}/bin"
 source_files=()
 
-config_home="$files_home/dev"
+config_home="$files_home/dev/gc600/"
 config_files=()
 
 scripts_home="$files_home/scripts"
@@ -27,7 +28,7 @@ for file in "$config_home"/*
 do
   config_files+=( "$file" )
 done
-  scp -P 171 "${config_files[@]}" $target_user_name@$target_address:"$target_folder/bin/dev"
+  scp -P 171 "${config_files[@]}" $target_user_name@$target_address:"${target_folder}/bin/dev/gc600"
 
 #bin/scripts folder
 for file in "$scripts_home"/*

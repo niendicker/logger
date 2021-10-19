@@ -24,7 +24,7 @@
 
 enum argvIndex {
   myself=0, 
-  configDir,
+  configFile,
   _argv_sz_
 };
 

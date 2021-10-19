@@ -16,14 +16,20 @@ int main(int argc , char *argv[]) {
     help();
     exit(done);
   }
-  mbCtx **devices;
-  char *dir = salloc_init(argv[configDir]);
-  devices = initDevices(dir);
-  free(dir);
-  if(!devices[0])
-    exit(EXIT_FAILURE);
-  mbCtx *mbDevice = devices[0];
+  //mbCtx **devices;
+  //char *dir = salloc_init(argv[configFile]);
+  //devices = initDevices(dir);
+  //free(dir);
+  //int count = 0;
+  ////for(; devices[count] != NULL; count++){
+  ////  fork();
+  ////  break;
+  ////}
+  //if(!devices[count])
+  //  exit(EXIT_FAILURE);
+  mbCtx *mbDevice = mbInit(argv[configFile]);
   if( mbTcpConnect(mbDevice) == failure ) {
+    mbClose(mbDevice);
     exit(EXIT_FAILURE);
   }
   char *pInterval = salloc_init(confValue(mbDevice->dev.config, pollingInterval_ms));
@@ -43,7 +49,7 @@ int main(int argc , char *argv[]) {
     if(poll < pollCount){
       if (mbUpdateAll(mbDevice) == failure)
         commError += eThreshold > 0 ? 1 : 0;
-      else if(saveData(mbDevice) == -1){ /* Just notify and keep polling */
+      else if(saveData(mbDevice, 0) == -1){ /* Just notify and keep polling */
 #ifndef QUIET_OUTPUT
         printf("\nError: Can't save data \n");
 #endif        
@@ -65,6 +71,7 @@ int main(int argc , char *argv[]) {
       usleep(pollDelay * 1000);
     }
   } /* polling */
+  saveData(mbDevice, 1); /* Free sqlCtx */
   mbClose(mbDevice);
   exit(EXIT_SUCCESS);
 }; /* main */

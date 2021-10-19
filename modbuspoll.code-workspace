@@ -32,7 +32,8 @@
         "*.def": "c",
         "linkedlist.h": "c",
         "assert.h": "c",
-        "time.h": "c"
+        "time.h": "c",
+        "cstdlib": "c"
       },
       "editor.stickyTabStops": true
    }

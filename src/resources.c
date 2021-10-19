@@ -28,7 +28,7 @@ char *salloc(int size){ /* release version disable all asserts */
   int stringSize = size + _str_null_;
   char *str = (char*)calloc( stringSize, _byte_size_);
   assert(str);
-  return (str != NULL ? str : NULL);
+  return str;
 };
 
 /**
@@ -49,7 +49,7 @@ char *salloc_init(char *strInit){ /* release version disable all asserts */
 char *srealloc(char* pstr, int newSize){ /* release version disable all asserts */
   pstr = (char*)realloc(pstr, newSize + _str_null_);
   assert(pstr);
-  return( pstr != NULL ? pstr : NULL );
+  return pstr;
 };
 
 /**

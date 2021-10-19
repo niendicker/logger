@@ -32,14 +32,14 @@ void deviceSetCtx(device *mbDevice){
 }
 
 /**
- * @brief Load all device parameters
+ * @brief Load device parameters
  */
 device *deviceConfigure(device* mbDevice, const char* filePath){
   assert(mbDevice && filePath);
   FILE* deviceConf = fopen(filePath, "r");
   assert(deviceConf);
   char keyValue[200];
-  _ln *newConfig = (_ln*)calloc(sizeof(_ln), _byte_size_);
+  _ln *newConfig = pushNode(newConfig);
   assert(newConfig);
   for( int line = 1; fgets(keyValue, sizeof(keyValue), deviceConf) != NULL; line++){ /* search for key = value lines on file */
     if( IGNORE( keyValue[0] ) ) continue; /* Comment or bad format */
@@ -80,8 +80,9 @@ int freeDeviceConf(device *dev){
   _ln *ln = dev->config;
   assert(ln);
   while( ln ){
+    _ln *lnNode = ln->next;
     deleteNode(ln, ln->data->key);
-    ln = ln->next;
+    ln = lnNode;
   }
   return done;
 };
@@ -96,21 +97,20 @@ void deviceMap(device *dev){
   assert(dev);
   FILE *deviceMap = fopen((char*)confValue(dev->config, mapFile), "r");
   if( !deviceMap ) {
-    return;
+    perror(strerror(errno));
+    exit(EXIT_FAILURE);
   }  
   for (char _kv[100]; fgets(_kv, sizeof(_kv), deviceMap) != NULL;) { /*  Scan the entire file */
     if( ( IGNORE( _kv[0] ) ) || ( ! TOKEN_KEY_MATCH( _kv, startTag) ) ) {
          continue; /* Comments */
-    }/* Found a register start tag */
-    _ln *newMbr = (_ln*)calloc(sizeof(_ln), _byte_size_); /* Create a new register */
+    }
+    _ln *newMbr = pushNode(newMbr); /* Create a new register */
     assert(newMbr); 
-    pushNode(newMbr);
     for( int i = 0; i < _lastTuple_; i++) {  
       if( ( fgets( _kv, sizeof(_kv), deviceMap ) == NULL ) ||
           ( IGNORE( _kv[0] ) ) ) { /*INVALID characters aren't allowed. Abort scanning... */
-        printf("Error: Invalid modbus register data block: %s\n", _kv);
-        fclose(deviceMap);
-        return;
+        perror(strerror(errno));
+        exit(EXIT_FAILURE);
       }
       char* token = strtok(_kv, "= ");
       assert(token);
@@ -160,8 +160,9 @@ int freeDeviceMap(device *dev){
   _ln *ln = dev->mbr;
   assert(ln);
   while( ln ){
+    _ln *lnNode = ln->next;
     deleteNode(ln, ln->data->key);
-    ln = ln->next;
+    ln = lnNode;
   }
   return done;
 }

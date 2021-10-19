@@ -66,7 +66,7 @@ void listNode(_ln *listNode);
 /**
  * @brief  Delete the data specified by key on any list node
  */
-void deleteData(_ln *listNode, const char *key);
+void deleteData(_dn *data, const char *key);
 
 /**
  * @brief  Delete the first node that contains the specified key in data 

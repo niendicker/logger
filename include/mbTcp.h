@@ -29,9 +29,14 @@
 #include "postgresql.h"
 #include "resources.h"
 
+/*Byte to modbus Word */
+#define BTOW(B_MSB, B_LSB) ( (((uint16_t)B_MSB << 8) & 0xFF00) | ((uint16_t)B_LSB & 0x00FF))
+/* Modbus Word to Modbus Double Word */
+#define WTODW(W_MSB, W_LSB) ((((uint32_t)W_MSB << 16) & 0xFFFF0000) | ((uint32_t)W_LSB & 0x0000FFFF))
+
 #define _mbpoll_std_ip_ ((char*)"MOD.BUS.POL.L:)")
 #define _mbpoll_max_dev_ ((int)10)
-#define _mbpoll_max_value_ ((char*)"100000.00") /* Max float parsed value */
+#define _mbpoll_max_value_ ((char*)"999000.00") /* Max float parsed value */
 
 enum polling{
   min_timeout_ms=100
@@ -289,6 +294,6 @@ int dropDeviceData(_ln *deviceRow);
 /**
  * @brief  Store the data on postgresql
 **/
-int saveData(mbCtx *dev);
+int saveData(mbCtx *dev, uint8_t last);
 
 #endif /* ./include/modbusTcp.h */

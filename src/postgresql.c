@@ -26,22 +26,25 @@ _sqlCtx *sqlCtxInit(_sqlCtx *sqlCtx, _ln *deviceConfig, _ln *deviceData){
   sqlCtx->inoutFile.filePath = salloc(strlen(_mbpoll_dataDir_) + strlen(sqlCtx->inoutFile.fileName));
   sprintf(sqlCtx->inoutFile.filePath, "%s%s", _mbpoll_dataDir_, sqlCtx->inoutFile.fileName); 
   free(auth);
-  static int TryOnce = true;/* Try once to create devices table */
-  if(TryOnce){
-    TryOnce = false;
+  //static int TryOnce = true;/* Try once to create devices table */
+  //if(TryOnce){
+  //  TryOnce = false;
     if(sqlCreateTable(sqlCtx) == 0)
       sqlAddColumns(sqlCtx, deviceData);
-  }
+  //}
   return sqlCtx;
 };
 
 int sqlCtxFree(_sqlCtx *sqlCtx){
   assert(sqlCtx);
+  free(sqlCtx->pid);
   free(sqlCtx->table);
   free(sqlCtx->database);
   free(sqlCtx->user);
   free(sqlCtx->auth);
+  free(sqlCtx->port);
   free(sqlCtx->hostname); 
+  free(sqlCtx->inoutFile.fileName);
   free(sqlCtx->inoutFile.filePath);  
   free(sqlCtx);  
   return 0;
@@ -211,9 +214,14 @@ _sqlCtx *persistData(_ln *deviceData, _ln *deviceConfig){
   static double dTime = _start_;
   static char *dataBuffer;
   static _sqlCtx *sqlCtx;
+  static int once = true;/* Try once to create devices table */
+  if(once){
+    once = false;
+    sqlCtx = sqlCtxInit(sqlCtx, deviceConfig, deviceData);
+  }
   if(dTime == _start_){ /* Start bufferring device data */
     cpu_time(_start_);
-    sqlCtx = sqlCtxInit(sqlCtx, deviceConfig, deviceData);
+    //sqlCtx = sqlCtxInit(sqlCtx, deviceConfig, deviceData);
     _ln *dataAvaliable = deviceData;
     char *csvHeader = insertCsvHeader(dataAvaliable);
     dataBuffer = salloc_init(csvHeader);
@@ -233,7 +241,7 @@ _sqlCtx *persistData(_ln *deviceData, _ln *deviceConfig){
 #endif
     } 
     remove(sqlCtx->inoutFile.fileName); 
-    sqlCtxFree(sqlCtx);
+    //sqlCtxFree(sqlCtx);
     free(dataBuffer);
     dTime = cpu_time(_start_);
     return sqlCtx;
