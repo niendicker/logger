@@ -39,7 +39,8 @@ device *deviceConfigure(device* mbDevice, const char* filePath){
   FILE* deviceConf = fopen(filePath, "r");
   assert(deviceConf);
   char keyValue[200];
-  _ln *newConfig = pushNode(newConfig);
+  _ln *newConfig = NULL;
+  newConfig = pushNode(newConfig);
   assert(newConfig);
   for( int line = 1; fgets(keyValue, sizeof(keyValue), deviceConf) != NULL; line++){ /* search for key = value lines on file */
     if( IGNORE( keyValue[0] ) ) continue; /* Comment or bad format */
@@ -64,8 +65,8 @@ device *deviceConfigure(device* mbDevice, const char* filePath){
 int showDeviceConf(device *dev){
   assert(dev && dev->config); 
   _ln *config = dev->config; 
+  printf("\nInfo: Device configuration \n");
   while ( config ){
-    printf("\nInfo: Device configuration \n");
     listNode(dev->config);
     config = config->next;  
   }
@@ -104,7 +105,8 @@ void deviceMap(device *dev){
     if( ( IGNORE( _kv[0] ) ) || ( ! TOKEN_KEY_MATCH( _kv, startTag) ) ) {
          continue; /* Comments */
     }
-    _ln *newMbr = pushNode(newMbr); /* Create a new register */
+    _ln *newMbr = NULL;
+    newMbr = pushNode(newMbr); /* Create a new register */
     assert(newMbr); 
     for( int i = 0; i < _lastTuple_; i++) {  
       if( ( fgets( _kv, sizeof(_kv), deviceMap ) == NULL ) ||
@@ -134,8 +136,9 @@ int showDeviceMap(device *dev) {
   assert(dev);
   _ln *mbr = dev->mbr;
   assert(mbr);
+  printf("\nInfo: Modbus Registers\n");
+  //listNode(mbr);
   while(mbr){
-    printf("\nInfo: Modbus Register\n");
     _dn *data = mbr->data;
     assert(data);
     while (data){
@@ -145,8 +148,9 @@ int showDeviceMap(device *dev) {
       data = data->next;
     }
     mbr = mbr->next;
+    puts("");
   }
-  puts("\n");
+  puts("");
   return done;
 };
 

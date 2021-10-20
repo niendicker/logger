@@ -36,7 +36,7 @@
 
 #define _mbpoll_std_ip_ ((char*)"MOD.BUS.POL.L:)")
 #define _mbpoll_max_dev_ ((int)10)
-#define _mbpoll_max_value_ ((char*)"999000.00") /* Max float parsed value */
+#define _mbpoll_max_value_ ((char*)"999000.0000") /* Max float parsed value */
 
 enum polling{
   min_timeout_ms=100
