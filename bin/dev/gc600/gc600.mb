@@ -65,6 +65,16 @@ unit     = KVAr
 meaning  = Generator_Avg_Reactive_Power
 lastValid = 0.0
 
+MB_REGISTER_START
+function = 03
+address  = 00014
+size     = 2
+format   = UL_00
+signal   = 0
+scale    = 1
+unit     = KWh
+meaning  = Generator_Active_Energy
+lastValid = 0.0
 
 #------------------------------------------------------------------------------
 # GENERATOR ENGINE VALUES
@@ -183,16 +193,16 @@ unit     = V
 meaning  = Mains_Avg_Voltage
 lastValid = 0.0
 
-MB_REGISTER_START
-function = 04
-address  = 00090
-size     = 2
-format   = UL_00
-signal   = 0
-scale    = 1
-unit     = KWh
-meaning  = Mains_Active_Energy
-lastValid = 0.0
+#MB_REGISTER_START
+#function = 04
+#address  = 00090
+#size     = 2
+#format   = UL_00
+#signal   = 0
+#scale    = 1
+#unit     = KWh
+#meaning  = Mains_Active_Energy
+#lastValid = 0.0
 
 MB_REGISTER_START
 function = 04
@@ -203,4 +213,76 @@ signal   = 0
 scale    = 256
 unit     = Arms
 meaning  = Mains_L1_Current
+lastValid = 0.0
+
+#------------------------------------------------------------------------------
+# BOARD VALUES
+#------------------------------------------------------------------------------
+MB_REGISTER_START
+function = 04
+address  = 00188
+size     = 2
+format   = SS_08
+signal   = 1
+scale    = 256
+unit     = C
+meaning  = Board_Temperature
+lastValid = 0.0
+
+#------------------------------------------------------------------------------
+# FAILURES AND WARNINGS
+#------------------------------------------------------------------------------
+MB_REGISTER_START
+function = 04
+address  = 00900
+size     = 1
+format   = US_00
+signal   = 0
+scale    = 1
+unit     = -
+meaning  = Alarms_Flag
+lastValid = 0.0
+
+MB_REGISTER_START
+function = 04
+address  = 00601
+size     = 1
+format   = US_00
+signal   = 0
+scale    = 1
+unit     = -
+meaning  = Alarms_Count
+lastValid = 0.0
+
+MB_REGISTER_START
+function = 04
+address  = 00602
+size     = 1
+format   = US_00
+signal   = 0
+scale    = 1
+unit     = -
+meaning  = Alarm01_Code
+lastValid = 0.0
+
+MB_REGISTER_START
+function = 04
+address  = 00603
+size     = 1
+format   = US_00
+signal   = 0
+scale    = 1
+unit     = -
+meaning  = Alarm02_Code
+lastValid = 0.0
+
+MB_REGISTER_START
+function = 04
+address  = 00604
+size     = 1
+format   = US_00
+signal   = 0
+scale    = 1
+unit     = -
+meaning  = Alarm03_Code
 lastValid = 0.0

@@ -1,9 +1,9 @@
 Solutions related to data collection, storage, analysis and export/interfaces.
 
-The modbusTcpMaster Service will run on the target system (arm) collecting information from all configured devices. An example configuration can be found in the file < dbms/00_rpi/gc600.conf >. The modbus registers map of each modbus device must follow the file model < dbms/00_rpi/gc600.mbr >.
+The modbusTcpMaster Service will run on the target system (arm) collecting information from configured device. An example configuration can be found in the file <gc600.conf>. The modbus registers map must follow the file model <gc600.mbr>.
 
-Multiple processes can be configured with one or more devices.
+Multiple instances can run in parallel.
 
-More details coming soon...
- 
-OPTIONS[ [config_file_path] [polling_time(ms)] [pollingCount] [errorMax] ]
+OPTIONS [config_file_path]
+
+

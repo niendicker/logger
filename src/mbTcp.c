@@ -302,36 +302,26 @@ int _mbReplyRaw(const mbCtx *ctx){
 int mbUpdateValue(mbCtx *ctx, _ln *mbr){
   uint8_t plBytes = (uint8_t)ctx->dev.rxADU[_reply_plBytes]; /*payload Bytes*/ 
   assert(plBytes <= 4);
-
   uint8_t *mbrData = (uint8_t*)calloc(plBytes, _byte_size_);
   memcpy(mbrData, &ctx->dev.rxADU[_replyData], plBytes);  
-
-  uint8_t isSigned = strtol(mbrValue(mbr, signal), NULL, 10);
-
-  int32_t raw_value = BTOW(mbrData[0], mbrData[1]); /*WORD*/
-  if( plBytes == sizeof(int32_t) ){ /*DOUBLE WORD*/
-    int32_t rawValueMsb = BTOW(mbrData[2], mbrData[3]);
+  int32_t raw_value = BTOW(mbrData[0], mbrData[1]); /*MSWF - WORD*/
+  if( plBytes == sizeof(int32_t) ){ /*MSWF - DOUBLE WORD*/
+    uint32_t rawValueMsb = BTOW(mbrData[2], mbrData[3]);
     raw_value =  WTODW( rawValueMsb, raw_value);
-    if (isSigned == 1){
-      if(raw_value & 0x80000000)
-        raw_value = ((~raw_value)+1)*-1; /* 2s complement */
-    }
+    if(raw_value & 0X80000000)
+      raw_value /= (1 << 16); 
   }
   else{
-    if (isSigned == 1){
-      if (raw_value & 0x8000)
-        raw_value = ((~raw_value)+1)*-1;
-    }
+    if(raw_value & 0x8000)
+      raw_value /= (1 << 8);
   }
   free(mbrData);
-
-  int16_t _scale_ = strtol(mbrValue(mbr, scale), NULL, 10);
+  int16_t _scale_ = strtol(mbrValue(mbr, scale), NULL, 10); /*1=int*/ /*256=fixed size floating point */
   assert(_scale_);
-  float parsedValue = (float4_t)((float4_t)raw_value / (float4_t)_scale_); /* APPLY SCALE */
+  float parsedValue = (float4_t)((float4_t)raw_value / (float4_t)_scale_);
   assert(parsedValue <= strtold(_mbpoll_max_value_, NULL));
-
   char *value = salloc(strlen(_mbpoll_max_value_));
-  sprintf(value, "%.02f", parsedValue);
+  sprintf(value, "%.04f", parsedValue);
   updateValue(mbr, value); /* SAVE PARSED VALUE */     
   free(value);
   return done;
@@ -451,15 +441,11 @@ _ln* pushDeviceData(char *deviceID, _ln *deviceMbr){
 **/
 int dropDeviceData(_ln *deviceRow){
   assert(deviceRow);
-  //char *columnID = salloc(_str_null_);
   while(deviceRow){ 
     _ln *lnNode = deviceRow->next;
-    //columnID = srealloc_copy(columnID, deviceRow->data->key);
     deleteNode(deviceRow, deviceRow->data->key);
-    //free(deviceRow);
     deviceRow = lnNode;
   }
-  //free(columnID);
   return 0;
 }; /* dropDeviceData */
 
