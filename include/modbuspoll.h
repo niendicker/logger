@@ -33,8 +33,5 @@ enum argConstraints{
   argMax=( _argv_sz_ )
 };
 
-mbCtx **initDevices(char *configDir);
-
-int help();
 #endif/* main */
 

@@ -10,23 +10,13 @@
  * @see https://www.modbus.org/docs/Modbus_Messaging_Implementation_Guide_V1_0b.pdf
  */ 
 #include "modbuspoll.h"
+int help();
 
 int main(int argc , char *argv[]) {
   if( argc != _argv_sz_ ) {
     help();
     exit(done);
   }
-  //mbCtx **devices;
-  //char *dir = salloc_init(argv[configFile]);
-  //devices = initDevices(dir);
-  //free(dir);
-  //int count = 0;
-  ////for(; devices[count] != NULL; count++){
-  ////  fork();
-  ////  break;
-  ////}
-  //if(!devices[count])
-  //  exit(EXIT_FAILURE);
   mbCtx *mbDevice = mbInit(argv[configFile]);
   if( mbTcpConnect(mbDevice) == failure ) {
     mbClose(mbDevice);
@@ -75,23 +65,6 @@ int main(int argc , char *argv[]) {
   mbClose(mbDevice);
   exit(EXIT_SUCCESS);
 }; /* main */
-
-mbCtx **initDevices(char *configDir){
-  static mbCtx *devices[_mbpoll_max_dev_];
-  for (int i = 0; i < _mbpoll_max_dev_; i++){
-    devices[i] = NULL;
-  }
-  char **configFiles = getConfigs(configDir, (char*)"conf");
-  char *configFullPath = salloc_init(configDir);
-  for(int i =0; configFiles[i]; i++){
-    srealloc(configFullPath, strlen(configFullPath)+strlen(configFiles[i]));
-    strcat(configFullPath, configFiles[i]);
-    devices[i] = mbInit(configFullPath);
-    free(configFullPath);
-    free(configFiles[i]);
-  }
-  return devices;
-}
 
 int help(){
   printf("\t\tmodbusPoll v%s.%s\n", VERSION_MAJOR, VERSION_MINOR);
