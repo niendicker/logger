@@ -1,11 +1,12 @@
 #! /bin/bash
 
 #? UPDATE 
-target_user_name="pi"
-#target_address='192.168.1.30'
+target_user_name="datacollector"
+target_address='192.168.1.80'
 #target_address='192.168.0.139'
-target_address='179.96.205.173'
-target_home="/home/pi"
+#target_address='179.96.205.173'
+#target_home="/home/pi"
+target_home="/home/${target_user_name}"
 target_folder="${target_home}/run"
 
 project_home="./00_rpi"

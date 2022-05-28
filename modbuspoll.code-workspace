@@ -35,6 +35,7 @@
         "time.h": "c",
         "cstdlib": "c"
       },
-      "editor.stickyTabStops": true
+      "editor.stickyTabStops": true,
+      "cSpell.enabled": true
    }
 }
