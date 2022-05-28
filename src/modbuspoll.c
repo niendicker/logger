@@ -10,7 +10,12 @@
  * @see https://www.modbus.org/docs/Modbus_Messaging_Implementation_Guide_V1_0b.pdf
  */ 
 #include "modbuspoll.h"
-int help();
+
+int help(){
+  printf("\t\tmodbusPoll v%s.%s\n", VERSION_MAJOR, VERSION_MINOR);
+  printf("ARGS [config_file_path]");
+  return done;
+}; /* help */
 
 int main(int argc , char *argv[]) {
   if( argc != _argv_sz_ ) {
@@ -66,8 +71,4 @@ int main(int argc , char *argv[]) {
   exit(EXIT_SUCCESS);
 }; /* main */
 
-int help(){
-  printf("\t\tmodbusPoll v%s.%s\n", VERSION_MAJOR, VERSION_MINOR);
-  return done;
-}; /* help */
 

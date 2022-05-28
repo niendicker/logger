@@ -137,7 +137,6 @@ int showDeviceMap(device *dev) {
   _ln *mbr = dev->mbr;
   assert(mbr);
   printf("\nInfo: Modbus Registers\n");
-  //listNode(mbr);
   while(mbr){
     _dn *data = mbr->data;
     assert(data);
