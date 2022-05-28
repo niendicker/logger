@@ -167,10 +167,9 @@ unit     = dd
 meaning  = Maintenance_Days
 lastValid = 0.0
 
-
-###------------------------------------------------------------------------------
-### MAINS VALUES
-##------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+# - MAINS VALUES -
+#------------------------------------------------------------------------------
 MB_REGISTER_START
 function = 04
 address  = 00029
@@ -285,4 +284,15 @@ signal   = 0
 scale    = 1
 unit     = -
 meaning  = Alarm03_Code
+lastValid = 0.0
+
+MB_REGISTER_START
+function = 04
+address  = 00120
+size     = 1
+format   = US_00
+signal   = 0
+scale    = 1
+unit     = -
+meaning  = Board_Mode
 lastValid = 0.0
