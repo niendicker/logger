@@ -2,7 +2,6 @@
  * @file resources.h
  * @author Marcelo Niendicker Grando (marcelogrando@icloud.com)
  * @brief  Resource management functions
- * @version 0.1
  * @date 2021-10-04
  * 
  * @copyright Copyright (c) 2021
