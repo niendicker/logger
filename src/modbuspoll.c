@@ -12,8 +12,8 @@
 #include "modbuspoll.h"
 
 int help(){
-  printf("\t\tmodbusPoll v%s.%s\n", VERSION_MAJOR, VERSION_MINOR);
-  printf("ARGS [config_file_path]");
+  printf("modbusPoll v%s.%s\n", VERSION_MAJOR, VERSION_MINOR);
+  printf("ARGS [config_file_path]\n");
   return done;
 }; /* help */
 
