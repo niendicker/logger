@@ -1,5 +1,9 @@
 # Field Data Logger Software
 ## Install
+* Download the [latest released](https://github.com/niendicker/datacollector/releases) version in zip or tar.gz format:
+```
+wget link_to_source
+```
 
 ## Configuration
 The modbusPoll software sends a ModBus query for each configured variable in the [mapFile](/devices/device.mbr) at specified interval **pollingInterval_ms**

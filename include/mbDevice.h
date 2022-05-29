@@ -1,13 +1,9 @@
 
 /**
- * @file   device_config_parser.h
+ * @file   mbDevice.h
  * @author Marcelo Niendicker Grando
  * @date   2021/09/13
- * @brief  Load device configuration and registers map information 
- * 
- * @see Modbus specification
- * @see https://modbus.org/docs/Modbus_Application_Protocol_V1_1b.pdf
- * @see https://www.modbus.org/docs/Modbus_Messaging_Implementation_Guide_V1_0b.pdf
+ * @brief  Load device configuration and registers map information  
  */ 
 
 #ifndef MB_DEVICE
