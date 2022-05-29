@@ -23,6 +23,7 @@ The devices [default mapFile](./run/devices/device.mbr).
 
 ## Run
 ```
-./run/modbusPoll.bin ./path/to/configuration/file
+./run/modbusPoll.bin ./run/devices/device.conf
 ``` 
-> Multiple instances can run in parallel.
+Multiple instances can run in parallel. Each instance can log data from a distinct device. 
+> **Each device that will be monitored must have the configuration and map file.**
