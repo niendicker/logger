@@ -1,6 +1,8 @@
-#In order to read and process any data from a slave modbus device the data bellow are mandatory.
-#register+++ is the open TAG for a register data block
-#space or comment after register block is the end tag
+# In order to read and process any data from a slave ModBus device, 
+#description data for each ModBus Register(MBR) must be provided.
+#
+#MBR_METADATA: open TAG for a ModBus Register(MBR) description data
+#BLANK LINE(S): closes MBR description data
 
 #------------------------------------------------------------------------------
 # LOAD VALUES
@@ -10,7 +12,7 @@
 #------------------------------------------------------------------------------
 # GENERATOR ELECTRIC VALUES
 #------------------------------------------------------------------------------
-MB_REGISTER_START
+MBR_METADATA
 function = 04
 address  = 00028
 size     = 1
@@ -21,7 +23,7 @@ unit     = Hz
 meaning  = Generator_Frequency
 lastValid = 0.0
 
-MB_REGISTER_START
+MBR_METADATA
 function = 04
 address  = 08004
 size     = 2
@@ -32,7 +34,7 @@ unit     = V
 meaning  = Generator_Avg_Voltage
 lastValid = 0.0
 
-MB_REGISTER_START
+MBR_METADATA
 function = 04
 address  = 00064
 size     = 2
@@ -43,7 +45,7 @@ unit     = KVA
 meaning  = Generator_Apparent_Power
 lastValid = 0.0
 
-MB_REGISTER_START
+MBR_METADATA
 function = 04
 address  = 00060
 size     = 2
@@ -54,7 +56,7 @@ unit     = KW
 meaning  = Generator_Avg_Active_Power
 lastValid = 0.0
 
-MB_REGISTER_START
+MBR_METADATA
 function = 04
 address  = 00062
 size     = 2
@@ -65,7 +67,7 @@ unit     = KVAr
 meaning  = Generator_Avg_Reactive_Power
 lastValid = 0.0
 
-MB_REGISTER_START
+MBR_METADATA
 function = 03
 address  = 00014
 size     = 2
@@ -79,7 +81,7 @@ lastValid = 0.0
 #------------------------------------------------------------------------------
 # GENERATOR ENGINE VALUES
 #------------------------------------------------------------------------------
-MB_REGISTER_START
+MBR_METADATA
 function = 04
 address  = 00080
 size     = 1
@@ -90,7 +92,7 @@ unit     = rpm
 meaning  = Engine_Speed
 lastValid = 0.0
 
-MB_REGISTER_START
+MBR_METADATA
 function = 04
 address  = 00073
 size     = 1
@@ -101,7 +103,7 @@ unit     = V
 meaning  = Battery_Voltage
 lastValid = 0.0
 
-MB_REGISTER_START
+MBR_METADATA
 function = 04
 address  = 00077
 size     = 2
@@ -112,7 +114,7 @@ unit     = C
 meaning  = Coolant_Temperature
 lastValid = 0.0
 
-MB_REGISTER_START
+MBR_METADATA
 function = 04
 address  = 00076
 size     = 1
@@ -123,7 +125,7 @@ unit     = bar
 meaning  = Oil_Pressure
 lastValid = 0.0
 
-MB_REGISTER_START
+MBR_METADATA
 function = 04
 address  = 00070
 size     = 2
@@ -134,7 +136,7 @@ unit     = hh
 meaning  = Working_Hours
 lastValid = 0.0
 
-MB_REGISTER_START
+MBR_METADATA
 function = 04
 address  = 00720
 size     = 2
@@ -145,7 +147,7 @@ unit     = hh
 meaning  = Maintenance_Hours_1
 lastValid = 0.0
 
-MB_REGISTER_START
+MBR_METADATA
 function = 04
 address  = 00722
 size     = 2
@@ -156,7 +158,7 @@ unit     = hh
 meaning  = Maintenance_Hours_2
 lastValid = 0.0
 
-MB_REGISTER_START
+MBR_METADATA
 function = 04
 address  = 00724
 size     = 2
@@ -170,7 +172,7 @@ lastValid = 0.0
 #------------------------------------------------------------------------------
 # - MAINS VALUES -
 #------------------------------------------------------------------------------
-MB_REGISTER_START
+MBR_METADATA
 function = 04
 address  = 00029
 size     = 1
@@ -181,7 +183,7 @@ unit     = Hz
 meaning  = Mains_Frequency
 lastValid = 0.0
 
-MB_REGISTER_START
+MBR_METADATA
 function = 04
 address  = 08002
 size     = 2
@@ -192,7 +194,7 @@ unit     = V
 meaning  = Mains_Avg_Voltage
 lastValid = 0.0
 
-#MB_REGISTER_START
+#MBR_METADATA
 #function = 04
 #address  = 00090
 #size     = 2
@@ -203,7 +205,7 @@ lastValid = 0.0
 #meaning  = Mains_Active_Energy
 #lastValid = 0.0
 
-MB_REGISTER_START
+MBR_METADATA
 function = 04
 address  = 00026
 size     = 2
@@ -217,7 +219,7 @@ lastValid = 0.0
 #------------------------------------------------------------------------------
 # BOARD VALUES
 #------------------------------------------------------------------------------
-MB_REGISTER_START
+MBR_METADATA
 function = 04
 address  = 00188
 size     = 2
@@ -231,7 +233,7 @@ lastValid = 0.0
 #------------------------------------------------------------------------------
 # FAILURES AND WARNINGS
 #------------------------------------------------------------------------------
-MB_REGISTER_START
+MBR_METADATA
 function = 04
 address  = 00900
 size     = 1
@@ -242,7 +244,7 @@ unit     = -
 meaning  = Alarms_Flag
 lastValid = 0.0
 
-MB_REGISTER_START
+MBR_METADATA
 function = 04
 address  = 00601
 size     = 1
@@ -253,7 +255,7 @@ unit     = -
 meaning  = Alarms_Count
 lastValid = 0.0
 
-MB_REGISTER_START
+MBR_METADATA
 function = 04
 address  = 00602
 size     = 1
@@ -264,7 +266,7 @@ unit     = -
 meaning  = Alarm01_Code
 lastValid = 0.0
 
-MB_REGISTER_START
+MBR_METADATA
 function = 04
 address  = 00603
 size     = 1
@@ -275,7 +277,7 @@ unit     = -
 meaning  = Alarm02_Code
 lastValid = 0.0
 
-MB_REGISTER_START
+MBR_METADATA
 function = 04
 address  = 00604
 size     = 1
@@ -286,7 +288,7 @@ unit     = -
 meaning  = Alarm03_Code
 lastValid = 0.0
 
-MB_REGISTER_START
+MBR_METADATA
 function = 04
 address  = 00120
 size     = 1
