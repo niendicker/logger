@@ -36,7 +36,6 @@
 *.x86_64
 *.hex
 # Debug and profilling 
-modbusPoll_dbg.*
 modbusPoll_prof.*
 
 # Debug files
