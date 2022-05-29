@@ -1,8 +1,24 @@
 # Field Data Logger Software
 ## Install
-* Download the [latest released](https://github.com/niendicker/datacollector/releases) version in zip or tar.gz format:
+### Download the release version in [zip](https://github.com/niendicker/FieldDatalogger/archive/refs/tags/release.zip) or [tar.gz](https://github.com/niendicker/FieldDatalogger/archive/refs/tags/release.tar.gz) format. 
+
+### From command line:
+* **zip**
 ```
-wget link_to_source
+wget https://github.com/niendicker/FieldDatalogger/archive/refs/tags/release.zip
+```
+* **tar.gz**
+```
+wget https://github.com/niendicker/FieldDatalogger/archive/refs/tags/release.tar.gz
+```
+### Unpack file:
+* **zip**
+```
+unzip release.zip
+```
+* **tar.gz**
+```
+tar -xf release.tar.gz
 ```
 
 ## Configuration
