@@ -72,7 +72,7 @@ enum mbrDataKeys{
 #define confValue(config,key)  ( peekValue( config, (char*)#key ) )
 #define mbrValue(mbr,key) ( peekValue( mbr, (char*)#key ) )
 
-#define startTag ("MB_REGISTER_START\n")
+#define startTag ((char*)"MBR_METADATA\n")
 
 typedef struct __tcp{
   int32_t socket;

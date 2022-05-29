@@ -1,6 +1,6 @@
 
 /**
- * @file   main.c
+ * @file   modbuspoll.h
  * @author Marcelo Niendicker Grando
  * @date   2021/09/13
  * @brief  Modbus polling tool
@@ -14,6 +14,7 @@
 
 #define VERSION_MAJOR "00"
 #define VERSION_MINOR "00"
+
 #include <stdbool.h>
 #include "error.h"
 #include "mbTcp.h"

@@ -97,14 +97,14 @@ int freeDeviceConf(device *dev){
 void deviceMap(device *dev){
   assert(dev);
   FILE *deviceMap = fopen((char*)confValue(dev->config, mapFile), "r");
-  if( !deviceMap ) {
-    perror(strerror(errno));
-    exit(EXIT_FAILURE);
-  }  
+  assert(deviceMap); 
+  __uint64_t mbr_tag_hash = djb2_hash(startTag); 
   for (char _kv[100]; fgets(_kv, sizeof(_kv), deviceMap) != NULL;) { /*  Scan the entire file */
-    if( ( IGNORE( _kv[0] ) ) || ( ! TOKEN_KEY_MATCH( _kv, startTag) ) ) {
-         continue; /* Comments */
+    uint64_t curr_line_hash = djb2_hash(_kv);
+    if (curr_line_hash != mbr_tag_hash) { /* Search for MBR metadata start tag */
+      continue;
     }
+    
     _ln *newMbr = NULL;
     newMbr = pushNode(newMbr); /* Create a new register */
     assert(newMbr); 

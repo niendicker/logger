@@ -1,8 +1,8 @@
 /**
- * @file   errorCtrl.h
+ * @file   error.h
  * @author Marcelo Niendicker Grando
  * @date   2021/09/13
- * @brief  File containing example of doxygen usage for quick reference.
+ * @brief  Basics status definitions
 */ 
 
 #ifndef ERROR_CTRL
