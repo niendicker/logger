@@ -24,16 +24,20 @@
 FOREACH_CONFIG_DATA_KEY( CONFIG_DATA_KEY )   \
         /* Polling parameters */             \
         CONFIG_DATA_KEY( pollingInterval_ms) \
-        CONFIG_DATA_KEY( pollingIteractions) \
+        CONFIG_DATA_KEY( pollingIterations) \
         CONFIG_DATA_KEY( pollingErrorMax   ) \
-        /* Modbus device parameters */       \
+        /* Modbus device registers */        \
         CONFIG_DATA_KEY( mapFile          )  \
+        /* Database table ID */              \
         CONFIG_DATA_KEY( tag              )  \
+        /* Connection */                     \
         CONFIG_DATA_KEY( protocol         )  \
+        CONFIG_DATA_KEY( msTimeout        )  \
+        /* TCP */                            \ 
         CONFIG_DATA_KEY( hostname         )  \
         CONFIG_DATA_KEY( ipAddress        )  \
         CONFIG_DATA_KEY( port             )  \
-        CONFIG_DATA_KEY( msTimeout        )  \
+        /* RTU */                            \
         CONFIG_DATA_KEY( unitAddress      )  \
         CONFIG_DATA_KEY( baudRate         )  \
         CONFIG_DATA_KEY( dataBits         )  \
