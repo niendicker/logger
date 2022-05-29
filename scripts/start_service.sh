@@ -1,6 +1,6 @@
 #! /bin/bash
 
-mbpollHome="/home/pi/run/bin"
+serviceBinDir="/home/pi/run/bin"
 configFile="./dev/$1"
 
 systemdUnitsDir="/lib/systemd/system"
@@ -13,8 +13,8 @@ templateUnitFile="modbuspoll@.service"
   echo "[Service]";
   echo "Type=simple";
   echo "User=pi";
-  echo "WorkingDirectory=${mbpollHome}";
-  echo "ExecStart=${mbpollHome}/modbusPoll.arm ${configFile}";
+  echo "WorkingDirectory=${serviceBinDir}";
+  echo "ExecStart=${serviceBinDir}/modbusPoll.arm ${configFile}";
   echo " ";
   echo "RestartSec=10";
   echo "Restart=on-failure";
