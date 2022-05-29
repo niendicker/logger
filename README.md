@@ -11,7 +11,15 @@ wget https://github.com/niendicker/FieldDatalogger/archive/refs/tags/release.zip
 ```
 wget https://github.com/niendicker/FieldDatalogger/archive/refs/tags/release.tar.gz
 ```
-
+### Unpack file:
+* **zip**
+```
+unzip release.zip
+```
+* **tar.gz**
+```
+tar -xf release.tar.gz
+```
 
 ## Configuration
 The modbusPoll software sends a ModBus query for each configured variable in the [mapFile](./run/devices/device.mbr) at specified interval **pollingInterval_ms**
