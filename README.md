@@ -2,10 +2,10 @@
 
 The modbusPoll software sends a ModBus query for each configured variable in the [mapFile] at specified interval [pollingInterval_ms=0]. 0 = no interval. 
 
-Iterations can be set on **pollingIterations
+Iterations can be set on ** pollingIterations
 > Default value: 0 = no limit
 
-Maximum communication errors can be set on **pollingErrorMax
+Maximum communication errors can be set on ** pollingErrorMax
 > Default value: 0 = no limit
 
 Timeout for a query reply can be set on **msTimeout
