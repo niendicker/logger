@@ -28,7 +28,7 @@ int main(int argc , char *argv[]) {
     exit(EXIT_FAILURE);
   }
   char *pInterval = salloc_init(confValue(mbDevice->dev.config, pollingInterval_ms));
-  char *pCout = salloc_init(confValue(mbDevice->dev.config, pollingIteractions));
+  char *pCout = salloc_init(confValue(mbDevice->dev.config, pollingIterations));
   char *pErrorMax = salloc_init(confValue(mbDevice->dev.config, pollingErrorMax));
   int pollDelay = (int)strtol( pInterval, NULL, 10);
   int pollCount = (int)strtol( pCout, NULL, 10);

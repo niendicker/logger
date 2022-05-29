@@ -29,14 +29,15 @@
 *.dylib
 
 # Executables
-*.bin
 *.exe
 *.out
 *.app
 *.i*86
 *.x86_64
 *.hex
-*.arm
+# Debug and profilling 
+modbusPoll_dbg.*
+modbusPoll_prof.*
 
 # Debug files
 *.dSYM/
@@ -52,4 +53,4 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
-bin/modbusPoll_dbg.arm
+

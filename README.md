@@ -1,9 +1,28 @@
-Solutions related to data collection, storage, analysis and export/interfaces.
+# Field Data Logger Software
+## Install
+* Download the [latest released](https://github.com/niendicker/datacollector/releases) version in zip or tar.gz format:
+```
+wget link_to_source
+```
 
-The modbusTcpMaster Service will run on the target system (arm) collecting information from configured device. An example of configuration can be found in the file <gc600.conf>. The modbus registers map must follow the file model <gc600.mbr>.
+## Configuration
+The modbusPoll software sends a ModBus query for each configured variable in the [mapFile](/devices/device.mbr) at specified interval **pollingInterval_ms**
+> Default value: 0 *no interval* 
 
-Multiple instances can run in parallel.
+Iterations can be set on **pollingIterations**
+> Default value: 0 *no limit*
 
-OPTIONS [config_file_path]
+Maximum communication errors can be set on **pollingErrorMax**
+> Default value: 0 *no limit*
 
+Timeout for a query reply can be set on **msTimeout**
+> Default value: 1000ms. The value must be adjusted in function of connection latency. *To low values can generate false communication errors*
 
+All above mentioned configurations can be found in the [default configuration](/run/devices/device.conf) file.
+The devices [default mapFile](/run/devices/device.mbr).
+
+## Run
+```
+./run/modbusPoll.bin ./path/to/configuration/file
+``` 
+> Multiple instances can run in parallel.

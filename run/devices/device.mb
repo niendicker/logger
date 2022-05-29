@@ -1,13 +1,12 @@
+#--------------------------------------------
+# Modbus map metadata
+#--------------------------------------------
+
 # In order to read and process any data from a slave ModBus device, 
-#description data for each ModBus Register(MBR) must be provided.
+# description data for each ModBus Register(MBR) must be provided.
 #
-#MBR_METADATA: open TAG for a ModBus Register(MBR) description data
-#BLANK LINE(S): closes MBR description data
-
-#------------------------------------------------------------------------------
-# LOAD VALUES
-#------------------------------------------------------------------------------
-
+# MBR_METADATA: open TAG for a ModBus Register(MBR) description data
+# BLANK LINE(S): closes MBR description data
 
 #------------------------------------------------------------------------------
 # GENERATOR ELECTRIC VALUES
