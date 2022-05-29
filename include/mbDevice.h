@@ -33,7 +33,7 @@ FOREACH_CONFIG_DATA_KEY( CONFIG_DATA_KEY )   \
         /* Connection */                     \
         CONFIG_DATA_KEY( protocol         )  \
         CONFIG_DATA_KEY( msTimeout        )  \
-        /* TCP */                            \ 
+        /* TCP */                            \
         CONFIG_DATA_KEY( hostname         )  \
         CONFIG_DATA_KEY( ipAddress        )  \
         CONFIG_DATA_KEY( port             )  \
