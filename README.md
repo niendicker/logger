@@ -6,7 +6,7 @@ wget link_to_source
 ```
 
 ## Configuration
-The modbusPoll software sends a ModBus query for each configured variable in the [mapFile](/devices/device.mbr) at specified interval **pollingInterval_ms**
+The modbusPoll software sends a ModBus query for each configured variable in the [mapFile](./run/devices/device.mbr) at specified interval **pollingInterval_ms**
 > Default value: 0 *no interval* 
 
 Iterations can be set on **pollingIterations**
@@ -18,8 +18,8 @@ Maximum communication errors can be set on **pollingErrorMax**
 Timeout for a query reply can be set on **msTimeout**
 > Default value: 1000ms. The value must be adjusted in function of connection latency. *To low values can generate false communication errors*
 
-All above mentioned configurations can be found in the [default configuration](/run/devices/device.conf) file.
-The devices [default mapFile](/run/devices/device.mbr).
+All above mentioned configurations can be found in the [default configuration](./run/devices/device.conf) file.
+The devices [default mapFile](./run/devices/device.mbr).
 
 ## Run
 ```
