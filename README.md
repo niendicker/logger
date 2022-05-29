@@ -15,7 +15,9 @@ All above mentioned configurations can be found in the [default configuration](/
 The devices [default mapFile](/devices/device.mbr).
 
 ## Running a instance:
+'''
 ./modbusPoll.bin /path/to/configuration/file
+'''
 
 Ex: 
 cd [/path/to/modbusPoll/root/folder]
