@@ -5,7 +5,7 @@ project_dir=".."
 sources_dir="$project_dir/src"
 include_dir="$project_dir/include"
 #library_home="/usr/local/lib"
-bin_output_dir="$project_dir/run"
+bin_output_dir="$project_dir/bin"
 bin_output="${bin_output_dir}/logger" 
 
 sourceFiles=("")

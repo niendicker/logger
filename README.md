@@ -21,10 +21,34 @@ unzip release.zip
 tar -xf release.tar.gz
 ```
 
+## Running
+* After unpacking the release file, change the current directory to logger root directory (created at unpacking phase)
+```
+cd ./logger-release
+```
+And run the following commands:
+* **x86**:
+```
+./bin/logger.bin ./devices/device.conf
+``` 
+```
+./bin/logger_dbg.bin ./devices/device.conf
+``` 
+
+* **arm**:
+```
+./bin/logger.arm ./devices/device.conf
+``` 
+```
+./bin/logger_dbg.arm ./devices/device.conf
+``` 
+Multiple instances can bin in parallel. Each instance can log data from a distinct device. 
+> **Each device that will be monitored must have the configuration and map file.**
+
 ## Configuration
 
 * The logger software sends [ModBus](https://modbus.org/) queries for each configured variable in the **mapFile**.
-> Default value: *[./run/devices/device.mbr](./run/devices/device.mbr)*
+> Default value: *[./devices/device.mbr](./devices/device.mbr)*
 
 * The interval between queries can be set on **pollingInterval_ms**
 > Default value: 0 *no interval* 
@@ -38,25 +62,4 @@ tar -xf release.tar.gz
 * Timeout for a query reply can be set on **msTimeout**
 > Default value: 1000ms. The value must be adjusted in function of connection latency. ***To low values can generate false communication errors***
 
-All above mentioned configurations can be found in the [default configuration file](./run/devices/device.conf).
-
-## Running
-* **x86**:
-```
-./run/logger.bin ./run/devices/device.conf
-``` 
-```
-./run/logger_dbg.bin ./run/devices/device.conf
-``` 
-
-* **arm**:
-```
-./run/logger.arm ./run/devices/device.conf
-``` 
-```
-./run/logger_dbg.arm ./run/devices/device.conf
-``` 
-
-
-Multiple instances can run in parallel. Each instance can log data from a distinct device. 
-> **Each device that will be monitored must have the configuration and map file.**
+### All above mentioned configurations can be found in the [default configuration file](./devices/device.conf).
