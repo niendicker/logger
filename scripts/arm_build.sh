@@ -18,7 +18,7 @@ done
 
 #Debuggin version 
 echo arm-linux-gnueabihf-g++ -Wall -g -o "${bin_output}_dbg.arm" -I "$include_dir" "${sourceFiles[@]}" && \
-     arm-linux-gnueabihf-g++ -Wall -g -o "${bin_output}_dbg.arm" -I "$include_dir" "${sourceFiles[@]}" && \
+     arm-linux-gnueabihf-g++ -Wall -g -o "${bin_output}_dbg.arm" -I "$include_dir" "${sourceFiles[@]}" -static && \
 echo "ARM: Debuggin version compiled succesful" 
 echo "------------------------------------------------"
 
@@ -31,5 +31,5 @@ echo "------------------------------------------------"
 #Production version - DONT DEFINE NDEBUG TO KEEP ASSERTS()
 echo arm-linux-gnueabihf-g++ -D QUIET_OUTPUT -Wall -o "${bin_output}.arm" -I "$include_dir" "${sourceFiles[@]}" && \
      arm-linux-gnueabihf-g++ -D QUIET_OUTPUT -Wall -o "${bin_output}.arm" -I "$include_dir" "${sourceFiles[@]}" && \
-echo "ARM: Production version copilled successful"
+echo "ARM: Release version copilled successful"
 echo "------------------------------------------------"
