@@ -8,10 +8,8 @@
 #ifndef LOGGER_H
 #define LOGGER_H
 
-#define VERSION_MAJOR "01"
-#define VERSION_MINOR "00"
-
 #include <stdbool.h>
+#include "version.h"
 #include "error.h"
 #include "mbTcp.h"
 #include "postgresql.h"

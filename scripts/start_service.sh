@@ -1,20 +1,20 @@
 #! /bin/bash
 
-serviceBinDir="/home/pi/run/bin"
-configFile="./dev/$1"
+binDir="$(pwd)/bin"
+configFile="${1}"
 
 systemdUnitsDir="/lib/systemd/system"
-templateUnitFile="modbuspoll@.service"
+templateUnitFile="logger@default.service"
 {
   echo "[Unit]";
-  echo "Description=Configuration $1";
+  echo "Description=Configuration ${1}";
   echo "After=multi-user.target";
   echo " ";
   echo "[Service]";
   echo "Type=simple";
   echo "User=pi";
-  echo "WorkingDirectory=${serviceBinDir}";
-  echo "ExecStart=${serviceBinDir}/modbusPoll.arm ${configFile}";
+  echo "WorkingDirectory=${binDir}";
+  echo "ExecStart=${binDir}/logger.arm ${configFile}";
   echo " ";
   echo "RestartSec=10";
   echo "Restart=on-failure";
@@ -24,8 +24,8 @@ templateUnitFile="modbuspoll@.service"
 } >> $systemdUnitsDir/$templateUnitFile
 #mv ./$templateUnitFile $systemdUnitsDir
 
-ln -s $systemdUnitsDir/modbuspoll@gc600.service $systemdUnitsDir
+sudo ln -s $systemdUnitsDir/logger@default.service $systemdUnitsDir
 
-systemctl enable $templateUnitFile
-systemctl start  $templateUnitFile
-systemctl status $templateUnitFile
+sudo systemctl enable $templateUnitFile && \
+sudo systemctl start  $templateUnitFile 
+sudo systemctl status $templateUnitFile

@@ -91,7 +91,7 @@ int runSql(_sqlCtx *ctx, char *query){
 **/
 int sqlAddColumns(_sqlCtx *ctx, _ln *deviceData){
   assert(ctx && deviceData) ;
-  char templateQuery[] = "ALTER TABLE modbuspoll.%s ADD if not exists %s %s;";
+  char templateQuery[] = "ALTER TABLE %s ADD if not exists %s %s;";
   char *query = salloc_init(templateQuery);
   char *columnID = salloc_init((char*)"local_timestamp" ); /*  Add timestamp*/
   char *dataType = salloc_init((char*)_pgsql_timestamp_);
