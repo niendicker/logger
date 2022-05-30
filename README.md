@@ -36,7 +36,7 @@ tar -xf release.tar.gz
 > Default value: 0 *no limit*
 
 * Timeout for a query reply can be set on **msTimeout**
-> Default value: 1000ms. The value must be adjusted in function of connection latency. *To low values can generate false communication errors*
+> Default value: 1000ms. The value must be adjusted in function of connection latency. ***To low values can generate false communication errors***
 
 All above mentioned configurations can be found in the [default configuration file](./run/devices/device.conf).
 
