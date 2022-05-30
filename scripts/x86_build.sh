@@ -1,12 +1,12 @@
 #!/bin/bash
 
 #? BUILD FOR X86
-project_dir="00_rpi"
+project_dir=".."
 sources_dir="$project_dir/src"
 include_dir="$project_dir/include"
 #library_home="/usr/local/lib"
-bin_output_dir="$project_dir/run"
-bin_output="${bin_output_dir}/modbusPoll" 
+bin_output_dir="$project_dir/bin"
+bin_output="${bin_output_dir}/logger" 
 
 #Load all .c files into sourceFiles variable
 sourceFiles=("")

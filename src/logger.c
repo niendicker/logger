@@ -1,18 +1,14 @@
 
 /**
- * @file   main.c
+ * @file   logger.c
  * @author Marcelo Niendicker Grando
  * @date   2021/09/13
- * @brief  Modbus polling tool
- *  
- * @see Modbus specification
- * @see https://modbus.org/docs/Modbus_Application_Protocol_V1_1b.pdf
- * @see https://www.modbus.org/docs/Modbus_Messaging_Implementation_Guide_V1_0b.pdf
+ * @brief  Field Logger Software
  */ 
-#include "modbuspoll.h"
+#include "logger.h"
 
 int help(){
-  printf("modbusPoll v%s.%s\n", VERSION_MAJOR, VERSION_MINOR);
+  printf("logger v%s.%s\n", VERSION_MAJOR, VERSION_MINOR);
   printf("ARGS [config_file_path]\n");
   return done;
 }; /* help */
