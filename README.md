@@ -46,7 +46,6 @@ Multiple instances can bin in parallel. Each instance can log data from a distin
 > **Each device that will be monitored must have the configuration and map file.**
 
 ## Configuration
-
 * The logger software sends [ModBus](https://modbus.org/) queries for each configured variable in the **mapFile**.
 > Default value: *[./devices/device.mbr](./devices/device.mbr)*
 
@@ -62,4 +61,4 @@ Multiple instances can bin in parallel. Each instance can log data from a distin
 * Timeout for a query reply can be set on **msTimeout**
 > Default value: 1000ms. The value must be adjusted in function of connection latency. ***To low values can generate false communication errors***
 
-### All above mentioned configurations can be found in the [default configuration file](./devices/device.conf).
+ > ### All above mentioned configurations can be found in the [default configuration file](./devices/device.conf).
