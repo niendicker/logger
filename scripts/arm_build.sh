@@ -18,7 +18,7 @@ done
 
 #Debuggin version 
 echo arm-linux-gnueabihf-g++ -Wall -g -o "${bin_output}_dbg.arm" -I "$include_dir" "${sourceFiles[@]}" && \
-     arm-linux-gnueabihf-g++ -Wall -g -o "${bin_output}_dbg.arm" -I "$include_dir" "${sourceFiles[@]}" -static && \
+     arm-linux-gnueabihf-g++ -Wall -g -o "${bin_output}_dbg.arm" -I "$include_dir" "${sourceFiles[@]}" && \
 echo "ARM: Debuggin version compiled succesful" 
 echo "------------------------------------------------"
 
