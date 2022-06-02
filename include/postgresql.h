@@ -29,21 +29,21 @@ typedef double float8_t;
 #define _pgsql_host_      ((char*)"localhost")
 #define _pgsql_port_      ((uint) 5432 )
 /* Modbuspoll connection */
-#define _mbpoll_          ((char*)"modbuspoll")
-#define _mbpoll_user_     ( _mbpoll_ )
-#define _mbpoll_database_ ( _mbpoll_ )
-#define _mbpoll_schema_   ( _mbpoll_ )
-#define _mbpoll_table_    ( _mbpoll_ )
+// #define _mbpoll_          ((char*)"modbuspoll")
+// #define _mbpoll_user_     ( _mbpoll_ )
+// #define _mbpoll_database_ ( _mbpoll_ )
+// #define _mbpoll_schema_   ( _mbpoll_ )
+// #define _mbpoll_table_    ( _mbpoll_ )
 #ifdef __arm__ /* arm-none-eabi-gcc compiler definition */
   #define _mbpoll_dataDir_  ((char*)"/home/pi/run/bin/"           )
   #define _mbpoll_sqlDir_   ((char*)"/home/pi/run/bin/sql/"       )
 #else /* Using default for modbuspoll project */
   #define _mbpoll_dataDir_  ((char*)"/home/dev/dbms/00_rpi/bin/" )
-  #define _mbpoll_sqlDir_   ((char*)"/home/dev/dbms/00_rpi/bin/sql/" )
+//  #define _mbpoll_sqlDir_   ((char*)"/home/dev/dbms/00_rpi/bin/sql/" )
 #endif
 /* Modbuspoll data export  */
-#define _sql_template_copy_    ((char*)"template_copy.sql")
-#define _sql_template_line_    ((uint)200)
+// #define _sql_template_copy_    ((char*)"template_copy.sql")
+// #define _sql_template_line_    ((uint)200)
 #define _csv_file_             ((char*)".csv")
 #define _csv_timestamp_header_ ((char*)"local_timestamp,") /* CSV default column */
 #define _csv_                  ((char*)"csv"  )
@@ -64,7 +64,7 @@ typedef struct __csvContext {
   char *fileName;
   char *filePath; /* Absolute file path 
   Must be accessible (r--) by postgres backend */
-} _csvCtx; /* [pid]_mbpoll.csv */
+} _csvFile; /* [pid]_mbpoll.csv */
 
 typedef struct __sqlContext {
   char *pid; /* Is used to generate unique cvs filename*/
@@ -75,7 +75,7 @@ typedef struct __sqlContext {
   char *database;
   char *table;
   //char *sqlTemplate; /* Sql script template. tags: %s %d %f... */
-  _csvCtx inoutFile;
+  _csvFile csvFile;
 } _sqlCtx;
 
 _sqlCtx *sqlCtxInit(_sqlCtx *sqlCtx, _ln *deviceConfig, _ln *deviceData);

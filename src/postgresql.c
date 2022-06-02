@@ -18,13 +18,13 @@ _sqlCtx *sqlCtxInit(_sqlCtx *sqlCtx, _ln *deviceConfig, _ln *deviceData){
   sprintf(sqlCtx->auth, auth, '='); /* put '=' signal  */
   sqlCtx->user     = salloc_init(peekValue( deviceConfig, (char*)"pgsqlUser")     );
   sqlCtx->database = salloc_init(peekValue( deviceConfig, (char*)"pgsqlDatabase") );
-  sqlCtx->table    = salloc_init(peekValue( deviceConfig, (char*)"tag")           );
+  sqlCtx->table    = salloc_init(peekValue( deviceConfig, (char*)"pgsqlTable")    );
   /* File used to export data */
-  sqlCtx->inoutFile.persist_dt = _cache_time;
-  sqlCtx->inoutFile.fileName = salloc(strlen(sqlCtx->pid) + strlen(_csv_file_));
-  sprintf(sqlCtx->inoutFile.fileName, "%s%s", sqlCtx->pid, _csv_file_); /* 12345678.csv */
-  sqlCtx->inoutFile.filePath = salloc(strlen(_mbpoll_dataDir_) + strlen(sqlCtx->inoutFile.fileName));
-  sprintf(sqlCtx->inoutFile.filePath, "%s%s", _mbpoll_dataDir_, sqlCtx->inoutFile.fileName); 
+  sqlCtx->csvFile.persist_dt = _cache_time;
+  sqlCtx->csvFile.fileName = salloc(strlen(sqlCtx->pid) + strlen(_csv_file_));
+  sprintf(sqlCtx->csvFile.fileName, "%s%s", sqlCtx->pid, _csv_file_); /* 12345678.csv */
+  sqlCtx->csvFile.filePath = salloc(strlen(_mbpoll_dataDir_) + strlen(sqlCtx->csvFile.fileName));
+  sprintf(sqlCtx->csvFile.filePath, "%s%s", _mbpoll_dataDir_, sqlCtx->csvFile.fileName); 
   free(auth);
   //static int TryOnce = true;/* Try once to create devices table */
   //if(TryOnce){
@@ -44,8 +44,8 @@ int sqlCtxFree(_sqlCtx *sqlCtx){
   free(sqlCtx->auth);
   free(sqlCtx->port);
   free(sqlCtx->hostname); 
-  free(sqlCtx->inoutFile.fileName);
-  free(sqlCtx->inoutFile.filePath);  
+  free(sqlCtx->csvFile.fileName);
+  free(sqlCtx->csvFile.filePath);  
   free(sqlCtx);  
   return 0;
 };
@@ -137,12 +137,12 @@ int sqlCreateTable(_sqlCtx *ctx){
 **/
 int sqlImportCsv(_sqlCtx *ctx){
   assert(ctx);
-  char templateQuery[] = "COPY modbuspoll.%s FROM '%s' DELIMITER ',' CSV HEADER;";
-  char *csvFile = ctx->inoutFile.filePath; /* Per process filename */
+  char templateQuery[] = "COPY %s.%s FROM '%s' DELIMITER ',' CSV HEADER;";
+  char *csvFile = ctx->csvFile.filePath; /* Per process filename */
   assert(csvFile);
-  uint querySize = sizeof(templateQuery) + strlen(ctx->table) + strlen(csvFile);
+  uint querySize = sizeof(templateQuery) + strlen(ctx->database) + strlen(ctx->table) + strlen(csvFile);
   char *query = salloc(querySize);
-  sprintf(query, templateQuery, ctx->table, csvFile); /* Set table/file for COPY query */
+  sprintf(query, templateQuery, ctx->database, ctx->table, csvFile); /* Set table/file for COPY query */
   int s = runSql(ctx, query);
   free(query);
   return s;
@@ -228,8 +228,8 @@ _sqlCtx *persistData(_ln *deviceData, _ln *deviceConfig){
     free(csvHeader);
   } /* Start bufferring device data */
   dTime = cpu_time(_check_);
-  if( dTime > sqlCtx->inoutFile.persist_dt ) { /* Dump/Store buffered device data */
-    FILE *outputFile = fopen(sqlCtx->inoutFile.fileName, "w+");
+  if( dTime > sqlCtx->csvFile.persist_dt ) { /* Dump/Store buffered device data */
+    FILE *outputFile = fopen(sqlCtx->csvFile.fileName, "w+");
     if(outputFile == NULL)
       return NULL;
     int outFileWritten = fprintf(outputFile, "%s", dataBuffer); 
@@ -240,7 +240,7 @@ _sqlCtx *persistData(_ln *deviceData, _ln *deviceConfig){
       printf("Info: Buffered data saved\n");
 #endif
     } 
-    remove(sqlCtx->inoutFile.fileName); 
+    remove(sqlCtx->csvFile.fileName); 
     //sqlCtxFree(sqlCtx);
     free(dataBuffer);
     dTime = cpu_time(_start_);
