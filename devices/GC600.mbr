@@ -1,0 +1,299 @@
+#--------------------------------------------
+# Modbus map metadata
+#--------------------------------------------
+
+# In order to read and process any data from a slave ModBus device, 
+# description data for each ModBus Register(MBR) must be provided.
+#
+# MBR_METADATA: open TAG for a ModBus Register(MBR) description data
+# BLANK LINE(S): closes MBR description data
+
+#------------------------------------------------------------------------------
+# GENERATOR ELECTRIC VALUES
+#------------------------------------------------------------------------------
+MBR_METADATA
+function = 04
+address  = 00028
+size     = 1
+format   = US_08
+signal   = 0
+scale    = 256
+unit     = Hz
+meaning  = Generator_Frequency
+lastValid = 0.0
+
+MBR_METADATA
+function = 04
+address  = 08004
+size     = 2
+format   = UL_08
+signal   = 0
+scale    = 256
+unit     = V
+meaning  = Generator_Avg_Voltage
+lastValid = 0.0
+
+MBR_METADATA
+function = 04
+address  = 00064
+size     = 2
+format   = UL_08
+signal   = 0
+scale    = 256
+unit     = KVA
+meaning  = Generator_Apparent_Power
+lastValid = 0.0
+
+MBR_METADATA
+function = 04
+address  = 00060
+size     = 2
+format   = SL_08
+signal   = 1
+scale    = 256
+unit     = KW
+meaning  = Generator_Avg_Active_Power
+lastValid = 0.0
+
+MBR_METADATA
+function = 04
+address  = 00062
+size     = 2
+format   = SL_08
+signal   = 1
+scale    = 256
+unit     = KVAr
+meaning  = Generator_Avg_Reactive_Power
+lastValid = 0.0
+
+MBR_METADATA
+function = 03
+address  = 00014
+size     = 2
+format   = UL_00
+signal   = 0
+scale    = 1
+unit     = KWh
+meaning  = Generator_Active_Energy
+lastValid = 0.0
+
+#------------------------------------------------------------------------------
+# GENERATOR ENGINE VALUES
+#------------------------------------------------------------------------------
+MBR_METADATA
+function = 04
+address  = 00080
+size     = 1
+format   = US_00
+signal   = 0
+scale    = 1
+unit     = rpm
+meaning  = Engine_Speed
+lastValid = 0.0
+
+MBR_METADATA
+function = 04
+address  = 00073
+size     = 1
+format   = US_08
+signal   = 0
+scale    = 256
+unit     = V
+meaning  = Battery_Voltage
+lastValid = 0.0
+
+MBR_METADATA
+function = 04
+address  = 00077
+size     = 2
+format   = SL_08
+signal   = 1
+scale    = 256
+unit     = C
+meaning  = Coolant_Temperature
+lastValid = 0.0
+
+MBR_METADATA
+function = 04
+address  = 00076
+size     = 1
+format   = US_08
+signal   = 0
+scale    = 256
+unit     = bar
+meaning  = Oil_Pressure
+lastValid = 0.0
+
+MBR_METADATA
+function = 04
+address  = 00070
+size     = 2
+format   = UL_00
+signal   = 0
+scale    = 1
+unit     = hh
+meaning  = Working_Hours
+lastValid = 0.0
+
+MBR_METADATA
+function = 04
+address  = 00720
+size     = 2
+format   = SL_00
+signal   = 0
+scale    = 1
+unit     = hh
+meaning  = Maintenance_Hours_1
+lastValid = 0.0
+
+MBR_METADATA
+function = 04
+address  = 00722
+size     = 2
+format   = SL_00
+signal   = 0
+scale    = 1
+unit     = hh
+meaning  = Maintenance_Hours_2
+lastValid = 0.0
+
+MBR_METADATA
+function = 04
+address  = 00724
+size     = 2
+format   = SL_00
+signal   = 0
+scale    = 1
+unit     = dd
+meaning  = Maintenance_Days
+lastValid = 0.0
+
+#------------------------------------------------------------------------------
+# - MAINS VALUES -
+#------------------------------------------------------------------------------
+MBR_METADATA
+function = 04
+address  = 00029
+size     = 1
+format   = US_08
+signal   = 0
+scale    = 256
+unit     = Hz
+meaning  = Mains_Frequency
+lastValid = 0.0
+
+MBR_METADATA
+function = 04
+address  = 08002
+size     = 2
+format   = UL_08
+signal   = 0
+scale    = 256
+unit     = V
+meaning  = Mains_Avg_Voltage
+lastValid = 0.0
+
+#MBR_METADATA
+#function = 04
+#address  = 00090
+#size     = 2
+#format   = UL_00
+#signal   = 0
+#scale    = 1
+#unit     = KWh
+#meaning  = Mains_Active_Energy
+#lastValid = 0.0
+
+MBR_METADATA
+function = 04
+address  = 00026
+size     = 2
+format   = UL_08
+signal   = 0
+scale    = 256
+unit     = Arms
+meaning  = Mains_L1_Current
+lastValid = 0.0
+
+#------------------------------------------------------------------------------
+# BOARD VALUES
+#------------------------------------------------------------------------------
+MBR_METADATA
+function = 04
+address  = 00188
+size     = 2
+format   = SS_08
+signal   = 1
+scale    = 256
+unit     = C
+meaning  = Board_Temperature
+lastValid = 0.0
+
+#------------------------------------------------------------------------------
+# FAILURES AND WARNINGS
+#------------------------------------------------------------------------------
+MBR_METADATA
+function = 04
+address  = 00900
+size     = 1
+format   = US_00
+signal   = 0
+scale    = 1
+unit     = -
+meaning  = Alarms_Flag
+lastValid = 0.0
+
+MBR_METADATA
+function = 04
+address  = 00601
+size     = 1
+format   = US_00
+signal   = 0
+scale    = 1
+unit     = -
+meaning  = Alarms_Count
+lastValid = 0.0
+
+MBR_METADATA
+function = 04
+address  = 00602
+size     = 1
+format   = US_00
+signal   = 0
+scale    = 1
+unit     = -
+meaning  = Alarm01_Code
+lastValid = 0.0
+
+MBR_METADATA
+function = 04
+address  = 00603
+size     = 1
+format   = US_00
+signal   = 0
+scale    = 1
+unit     = -
+meaning  = Alarm02_Code
+lastValid = 0.0
+
+MBR_METADATA
+function = 04
+address  = 00604
+size     = 1
+format   = US_00
+signal   = 0
+scale    = 1
+unit     = -
+meaning  = Alarm03_Code
+lastValid = 0.0
+
+MBR_METADATA
+function = 04
+address  = 00120
+size     = 1
+format   = US_00
+signal   = 0
+scale    = 1
+unit     = -
+meaning  = Board_Mode
+lastValid = 0.0
