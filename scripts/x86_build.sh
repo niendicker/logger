@@ -8,6 +8,8 @@ include_dir="$project_dir/include"
 bin_output_dir="$project_dir/bin"
 bin_output="${bin_output_dir}/logger" 
 
+
+
 #Load all .c files into sourceFiles variable
 sourceFiles=("")
 index=0
@@ -18,19 +20,19 @@ do
 done
 
 #Debuggin version
-echo gcc -Wall -g -o "${bin_output}_dbg.bin" -I "$include_dir" "${sourceFiles[@]}"
-     gcc -Wall -g -o "${bin_output}_dbg.bin" -I "$include_dir" "${sourceFiles[@]}" && \
+echo g++ -Wall -g -o "${bin_output}_dbg.bin" -I "$include_dir" "${sourceFiles[@]}"
+     g++ -Wall -g -o "${bin_output}_dbg.bin" -I "$include_dir" "${sourceFiles[@]}" && \
 echo "X86_Linux: Debuggin version copilled successful"
 echo "------------------------------------------------"
 
 #Profilling version 
-echo gcc -Wall -pg -o "${bin_output}_prof.bin" -I "$include_dir" "${sourceFiles[@]}"
-     gcc -Wall -pg -o "${bin_output}_prof.bin" -I "$include_dir" "${sourceFiles[@]}" && \
+echo g++ -Wall -pg -o "${bin_output}_prof.bin" -I "$include_dir" "${sourceFiles[@]}"
+     g++ -Wall -pg -o "${bin_output}_prof.bin" -I "$include_dir" "${sourceFiles[@]}" && \
 echo "X86_Linux: Profilling version copilled successful"
 echo "------------------------------------------------"
 
 #Production version - DONT DEFINE NDEBUG TO KEEP ASSERTS()
-echo gcc -D QUIET_OUTPUT -Wall -o "${bin_output}.bin" -I "$include_dir" "${sourceFiles[@]}"
-     gcc -D QUIET_OUTPUT -Wall -o "${bin_output}.bin" -I "$include_dir" "${sourceFiles[@]}" && \
+echo g++ -D QUIET_OUTPUT -Wall -o "${bin_output}.bin" -I "$include_dir" "${sourceFiles[@]}"
+     g++ -D QUIET_OUTPUT -Wall -o "${bin_output}.bin" -I "$include_dir" "${sourceFiles[@]}" && \
 echo "X86_Linux: Production version copilled successful"
 echo "------------------------------------------------"

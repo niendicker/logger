@@ -14,6 +14,8 @@
 #include "mbTcp.h"
 #include "postgresql.h"
 
+#include "device.h"
+
 #define _min_poll_time_ ((int)1) //ms
 #define _max_devices_ ((int)10)
 
