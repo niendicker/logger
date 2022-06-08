@@ -1,10 +1,11 @@
 
 /**
- * @file   logger.c
+ * @file   main.c
  * @author Marcelo Niendicker Grando
  * @date   2021/09/13
  * @brief  Field Logger Software
- */ 
+ */
+
 #include "main.h"
 
 int help(){
@@ -18,6 +19,9 @@ int main(int argc , char *argv[]) {
     help();
     exit(done);
   }
+
+  mbTcpDevice* mbDev = new mbTcpDevice();
+
   mbCtx *mbDevice = mbInit(argv[configFile]);
   if( mbTcpConnect(mbDevice) == failure ) {
     mbClose(mbDevice);

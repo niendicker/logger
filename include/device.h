@@ -38,16 +38,12 @@ private:
   string* ipv4;
   int port;
 public:
-  mbTcpDevice(/* args */);
-  ~mbTcpDevice();
+  mbTcpDevice(/* args */){};
+  ~mbTcpDevice(){};
+  int connect(){ return 0; };
+  int disconnect(){ return 0; };
+  int readData(){ return 0; };
 };
 
-mbTcpDevice::mbTcpDevice(/* args */)
-{
-}
-
-mbTcpDevice::~mbTcpDevice()
-{
-}
 
 #endif
