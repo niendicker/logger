@@ -5,7 +5,7 @@
  * @date   2021/09/13
  * @brief  Field Logger Software
  */ 
-#include "logger.h"
+#include "main.h"
 
 int help(){
   printf("logger v%s.%s\n", VERSION_MAJOR, VERSION_MINOR);

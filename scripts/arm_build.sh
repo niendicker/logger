@@ -31,5 +31,5 @@ echo "------------------------------------------------"
 #Production version - DONT DEFINE NDEBUG TO KEEP ASSERTS()
 echo arm-linux-gnueabihf-g++ -D QUIET_OUTPUT -Wall -o "${bin_output}.arm" -I "$include_dir" "${sourceFiles[@]}" && \
      arm-linux-gnueabihf-g++ -D QUIET_OUTPUT -Wall -o "${bin_output}.arm" -I "$include_dir" "${sourceFiles[@]}" && \
-echo "ARM: Production version copilled successful"
+echo "ARM: Release version copilled successful"
 echo "------------------------------------------------"
